@@ -1,16 +1,16 @@
 #' @rdname estimation_desc
 #' @export
-MAest.ht <- function(y, N, FIA=TRUE, getweights=FALSE) {
+MAest.ht <- function(y, N, FIA=TRUE, getweights=FALSE, var_method = "LinHTSRS") {
 
   ## Set global variables
   nhat.var <- NULL
 
   NBRPLT <- length(y)
   NBRPLT.gt0 <- sum(y > 0)
-  var_method <- "LinHTSRS"
-  estht <- mase::horvitzThompson(y, pi = NULL, N = N, pi2 = NULL,
+  # var_method <- "LinHTSRS"
+  estht <- suppressMessages(mase::horvitzThompson(y, pi = NULL, N = N, pi2 = NULL,
 						var_est = TRUE, var_method = var_method,
-						B = 1000)
+						B = 1000))
 
   esthtdt <- data.table(estht$pop_mean, estht$pop_mean_var, NBRPLT, NBRPLT.gt0)
   setnames(esthtdt, c("nhat", "nhat.var", "NBRPLT", "NBRPLT.gt0"))
@@ -33,22 +33,23 @@ MAest.ht <- function(y, N, FIA=TRUE, getweights=FALSE) {
 
 #' @rdname estimation_desc
 #' @export
-MAest.ps <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE, getweights=FALSE) {
+MAest.ps <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE, getweights=FALSE,
+                     var_method = "SRSunconditional") {
 
   ## Set global variables
   nhat.var <- NULL
 
   NBRPLT <- length(y)
   NBRPLT.gt0 <- sum(y > 0)
-  var_method <- "SRSunconditional"
+  # var_method <- "SRSunconditional"
 
-  estps <- tryCatch(mase::postStrat(	  y = y,
+  estps <- tryCatch(suppressMessages(mase::postStrat(	  y = y,
 					   xsample = x_sample,
 					   xpop = x_pop,
 					   pi = NULL, N = N, pi2 = NULL,
 					   var_est = TRUE, var_method = var_method,
 					   datatype = "means",
-					   B = 1000),
+					   B = 1000)),
 				error=function(err) {
 					message(err, "\n")
 					return(NULL)
@@ -96,7 +97,7 @@ MAest.ps <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE, getweig
 #' @rdname estimation_desc
 #' @export
 MAest.greg <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE,
-			modelselect=FALSE, getweights=FALSE) {
+			modelselect=FALSE, getweights=FALSE, var_method = "LinHTSRS") {
 
   #y <- yn.vect
 
@@ -121,12 +122,17 @@ MAest.greg <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE,
     preds.selected <- na.omit(preds.selected[1:(length(y)-1)])
   }
 
-  if (!is.null(preds.selected) && length(preds.selected) > 0) {
-    xsample <- x_sample[, preds.selected, drop=FALSE]
-    xpop <- x_pop[, preds.selected, drop=FALSE]
+#  if (!is.null(preds.selected) && length(preds.selected) > 0) {
+    if (length(preds.selected) == 0) {
+      xsample <- x_sample[, names(predselect), drop=FALSE]
+      xpop <- x_pop[, names(predselect), drop=FALSE]
+    } else {
+      xsample <- x_sample[, preds.selected, drop=FALSE]
+      xpop <- x_pop[, preds.selected, drop=FALSE]
+    }
 
-    var_method <- "LinHTSRS"
-    estgreg <- tryCatch(mase::greg(	y = y,
+    # var_method <- "LinHTSRS"
+    estgreg <- tryCatch(suppressMessages(mase::greg(	y = y,
 					xsample = xsample,
 					xpop = x_pop,
 					pi = NULL, N = N, pi2 = NULL,
@@ -135,14 +141,14 @@ MAest.greg <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE,
 					datatype = "means",
   					modelselect = FALSE,
 					lambda = "lambda.min",
-					B = 1000),
+					B = 1000)),
 				error=function(err) {
 					message(err, "\n")
 					return(NULL)
 				} )
-  } else {
-    estgreg <- NULL
-  }
+#  } else {
+#    estgreg <- NULL
+#  }
   if (is.null(estgreg)) {
     if (save4testing) {
       message("saving objects to working directory for testing: y, x_sample, x_pop, N")
@@ -192,7 +198,8 @@ MAest.greg <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE,
 
 #' @rdname estimation_desc
 #' @export
-MAest.ratio <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE) {
+MAest.ratio <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE,
+                        var_method = "LinHTSRS") {
 
 #y <- yn.vect
 
@@ -201,15 +208,15 @@ MAest.ratio <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE) {
 
   NBRPLT <- length(y)
   NBRPLT.gt0 <- sum(y > 0)
-  var_method <- "LinHTSRS"
+  # var_method <- "LinHTSRS"
 
-  estratio <- tryCatch(mase::ratioEstimator(	y = y,
+  estratio <- tryCatch(suppressMessages(mase::ratioEstimator(	y = y,
 					xsample = x_sample,
 					xpop = x_pop,
 					pi = NULL, N = N, pi2 = NULL,
 					var_est = TRUE, var_method = var_method,
 					datatype = "means",
-					B = 1000),
+					B = 1000)),
 				error=function(err) {
 					message(err, "\n")
 					return(NULL)
@@ -256,7 +263,7 @@ MAest.ratio <- function(y, N, x_sample, x_pop, FIA=TRUE, save4testing=TRUE) {
 #' @rdname estimation_desc
 #' @export
 MAest.gregEN <- function(y, N, x_sample, x_pop, FIA=TRUE, model="linear",
-		save4testing=TRUE, getweights=FALSE) {
+		save4testing=TRUE, getweights=FALSE, var_method = "LinHTSRS") {
 
 #y <- yn.vect
 
@@ -269,8 +276,8 @@ MAest.gregEN <- function(y, N, x_sample, x_pop, FIA=TRUE, model="linear",
 
   NBRPLT <- length(y)
   NBRPLT.gt0 <- sum(y > 0)
-  var_method <- "LinHTSRS"
-  estgregEN <- tryCatch(mase::gregElasticNet(	y = y,
+  # var_method <- "LinHTSRS"
+  estgregEN <- tryCatch(suppressMessages(mase::gregElasticNet(	y = y,
 					xsample = x_sample,
 					xpop = x_pop,
 					pi = NULL, N = N, pi2 = NULL,
@@ -278,7 +285,7 @@ MAest.gregEN <- function(y, N, x_sample, x_pop, FIA=TRUE, model="linear",
   					var_est = TRUE, var_method = var_method,
 					datatype = "means",
 					lambda = "lambda.min",
-					B = 1000),
+					B = 1000)),
 				error=function(err) {
 					message(err, "\n")
 					return(NULL)
@@ -339,7 +346,8 @@ MAest.gregEN <- function(y, N, x_sample, x_pop, FIA=TRUE, model="linear",
 MAest <- function(yn="CONDPROP_ADJ", dat.dom, cuniqueid, unitlut=NULL,
 	pltassgn, esttype="ACRES", MAmethod, strvar=NULL, prednames=NULL,
 	yd=NULL, ratiotype="PERACRE", N, FIA=TRUE, modelselect=FALSE,
-	getweights=FALSE) {
+	getweights=FALSE, 
+	var_method = ifelse(MAmethod %in% c("PS"), "SRSunconditional", "LinHTSRS")) {
 
   ########################################################################################
   ## DESCRIPTION: Gets estimates from mase::horvitzThompson
@@ -367,14 +375,14 @@ MAest <- function(yn="CONDPROP_ADJ", dat.dom, cuniqueid, unitlut=NULL,
 
   if (MAmethod == "HT") {
     estlst <- MAest.ht(yn.vect, N, FIA=FIA,
-			getweights=getweights)
+			getweights=getweights, var_method = var_method)
 
   } else if (MAmethod == "PS") {
     x_sample <- pltdat.dom[, strvar][[1]]
     x_pop <- unitlut[, c(strvar, "Prop"), with=FALSE]
 
     estlst <- MAest.ps(yn.vect, N, x_sample, x_pop, FIA=FIA,
-			getweights=getweights)
+			getweights=getweights, var_method = var_method)
 
   } else {
 
@@ -383,11 +391,11 @@ MAest <- function(yn="CONDPROP_ADJ", dat.dom, cuniqueid, unitlut=NULL,
 
     if (MAmethod == "greg") {
       estlst <- MAest.greg(yn.vect, N, x_sample, x_pop, FIA=FIA,
-		modelselect=modelselect, getweights=getweights)
+		modelselect=modelselect, getweights=getweights, var_method = var_method)
 
     } else if (MAmethod == "gregEN") {
       estlst <- MAest.gregEN(yn.vect, N, x_sample, x_pop, FIA=FIA,
-                             getweights=getweights)
+                             getweights=getweights, var_method = var_method)
 
     } else if (MAmethod == "ratio") {
       if (length(prednames) > 1) {
@@ -396,7 +404,8 @@ MAest <- function(yn="CONDPROP_ADJ", dat.dom, cuniqueid, unitlut=NULL,
         x_sample <- x_sample[[prednames]]
         x_pop <- x_pop[[prednames]]
       }
-      est <- MAest.ratio(yn.vect, N, x_sample, x_pop, FIA=FIA)
+      est <- MAest.ratio(yn.vect, N, x_sample, x_pop, FIA=FIA, 
+                         var_method = var_method)
 
     } else {
       stop("invalid MAmethod")
@@ -419,7 +428,8 @@ MAest <- function(yn="CONDPROP_ADJ", dat.dom, cuniqueid, unitlut=NULL,
 #' @export
 MAest.dom <- function(dom, dat, cuniqueid, unitlut, pltassgn, esttype, MAmethod,
 		strvar=NULL, prednames=NULL, domain, N, response=NULL, FIA=TRUE,
-		modelselect=FALSE, getweights=FALSE) {
+		modelselect=FALSE, getweights=FALSE,
+		var_method = ifelse(MAmethod %in% c("PS"), "SRSunconditional", "LinHTSRS")) {
 
   ## Subset tomdat to domain=dom
   dat.dom <- dat[dat[[domain]] == dom,]
@@ -448,7 +458,7 @@ MAest.dom <- function(dom, dat, cuniqueid, unitlut, pltassgn, esttype, MAmethod,
 		cuniqueid=cuniqueid, esttype=esttype, unitlut=unitlut,
 		strvar=strvar, prednames=prednames,
 		MAmethod=MAmethod, N=N, FIA=FIA, modelselect=modelselect,
-		getweights=getweights)
+		getweights=getweights, var_method = var_method)
 
   domestlst <- lapply(domestlst, function(x, dom, domain) {
 		dt <- data.table(dom, x)
@@ -466,7 +476,8 @@ MAest.dom <- function(dom, dat, cuniqueid, unitlut, pltassgn, esttype, MAmethod,
 MAest.unit <- function(unit, dat, cuniqueid, unitlut, unitvar,
 		esttype, MAmethod="HT", strvar=NULL, prednames=NULL,
 		domain, response, npixels, FIA=TRUE, modelselect=TRUE,
-		getweights=FALSE) {
+		getweights=FALSE,
+		var_method = ifelse(MAmethod %in% c("PS"), "SRSunconditional", "LinHTSRS")) {
 ## testing
 #unit = estunits[1]
 #domain="TOTAL"
@@ -517,7 +528,7 @@ MAest.unit <- function(unit, dat, cuniqueid, unitlut, unitvar,
 #unitlut=unitlut.unit
 #pltassgn=pltassgn.unit
 #N=N.unit
-#dom=doms[1]
+#dom=doms[5]
 
   unitestlst <- lapply(doms, MAest.dom,
 			dat=dat.unit, cuniqueid=cuniqueid,
@@ -525,7 +536,8 @@ MAest.unit <- function(unit, dat, cuniqueid, unitlut, unitvar,
 			esttype=esttype, MAmethod=MAmethod,
 			strvar=strvar, prednames=prednames,
 			domain=domain, N=N.unit, response=response,
-			FIA=FIA, modelselect=modelselect, getweights=getweights)
+			FIA=FIA, modelselect=modelselect, getweights=getweights,
+			var_method = var_method)
 
   unitest <- data.table(unit=unit, do.call(rbind, sapply(unitestlst, '[', "est")))
   setnames(unitest, "unit", unitvar)
