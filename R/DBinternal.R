@@ -10,8 +10,8 @@
 
 #' @rdname internal_desc
 #' @export
-DBvars.default <- function(istree, isseed, isveg, isgrm, isdwm, issubp, 
-	regionVars, plotgeom=FALSE, regionVarsRS="RMRS") {
+DBvars.default <- function(istree=FALSE, isseed=FALSE, isveg=FALSE, isgrm=FALSE, 
+	isdwm=FALSE, issubp=FALSE, regionVars=FALSE, plotgeom=FALSE, regionVarsRS="RMRS") {
 
   ## Set global variables
   treevarlst=tsumvarlst=seedvarlst=ssumvarlst=vsubpsppvarlst=vsubpstrvarlst=
@@ -431,7 +431,7 @@ getpfromqry <- function(dsn=NULL, evalid=NULL, plotCur=TRUE,
       }
     }
 
-    if (!is.null(where.qry) && where.qry != "")
+    if (!is.null(where.qry) && any(where.qry != ""))
       where.qry <- paste(" where", where.qry)
 
     ## create pfromqry
@@ -774,7 +774,7 @@ DBcreateSQLite <- function(SQLitefn=NULL, gpkg=FALSE, dbconnopen=FALSE,
     SQLitefn <- paste(outfn.pre, SQLitefn, sep="_")
   }
   
-  if (is.na(getext(SQLitefn)) || getext(SQLitefn) == "NA") {
+  if (any(is.na(getext(SQLitefn))) || any(getext(SQLitefn) == "NA")) {
     SQLitefn <- paste0(SQLitefn, dbext)
   }
   if (!dir.exists(dirname(SQLitefn))) {
