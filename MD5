@@ -1,7 +1,6 @@
-f728ae351e36a55082064e1f63d300c2 *DESCRIPTION
-67a2ff284a9c8679da37fd38cc86234d *LICENSE
+e729280ae30946b0d55c073f728b7831 *DESCRIPTION
 10e2ab2f5b05842c99da52d3ec5f4e46 *NAMESPACE
-6142941f015bbcb015316ebce3628aee *NEWS.md
+86497e98f263cab018ae2c0fa111a2fd *NEWS.md
 ff12f86d91de4f6ba9149821c9379235 *R/CmbTable.R
 b6cce4754c26cea7976e74d891077b93 *R/DBinternal.R
 07f833fa92981b13a57947f9005fcdcb *R/DBtestPostgreSQL.R
@@ -14,7 +13,7 @@ b6cce4754c26cea7976e74d891077b93 *R/DBinternal.R
 72f29b8871e2d3b788fb96db3372d4e8 *R/Ratio2Size.R
 908fbc5954bcbf333ae0ea4ad4d66c0a *R/RcppExports.R
 44577afd1e8dbef699e52c4626cf36e9 *R/RunningStats.R
-2ef1040c14393c1207e1c37d2e036e77 *R/SAest.pbar.R
+6df91fcf692d324706f8daa11a0aa19c *R/SAest.pbar.R
 fd006f7a7b524cc01009f3a9074cc99b *R/aaa.R
 595d38117e27d2933f653ea9934b1d82 *R/addCI.R
 dbb9ac5ba5b76e6d8380ccfb15e35bd3 *R/change10char.R
@@ -27,12 +26,12 @@ abc0e7b8124a7e5c9e71f8b3b8a46451 *R/cool_functions.R
 aeea271364754da6132b4875a5984bfd *R/fileexistsnm.R
 ca3195b3c81e8bdf3d9cdc4152ab392f *R/getRefcodes.R
 d32c1d9b7a7b003c24ec383d4c3ee28a *R/getRefobject.R
-a69196ee0d830c348271ebc44080cfb5 *R/getadjfactorGB.R
-a7240be46dddad0f376b8d2856b8e216 *R/getadjfactorPLOT.R
+ec72b899e52f2d037e9f48c0e5c1ce3d *R/getadjfactorGB.R
+3e1da80d9aea0348e46133ac4f3d67ff *R/getadjfactorPLOT.R
 19cdd3d03f7ccd1aac53cadf481fd37a *R/getfunnm.R
 018b807f0756ebfd1997802003e8bdcf *R/getlt10char.R
 ce1a42dd565397a5c7bc30aa9cd66f27 *R/getrhat.R
-d701ca1675dc6fffc104cbcb2cc6cb70 *R/groupStrata.R
+bb8553034a27b57317bc7629e373a42a *R/groupStrata.R
 3e01da549f6298a9db35fa77e3bf630b *R/groupUnits.R
 062da3a538e442b0f3549a5e2135becf *R/internal_desc.R
 399dc967a1338bf527cf6f42c50bf647 *R/multest_options.R
@@ -48,7 +47,7 @@ d701ca1675dc6fffc104cbcb2cc6cb70 *R/groupStrata.R
 984803459105ec0294d90bb0b0fc858c *R/spMakeSpatial_options.R
 9bdd6b45305a71821350d5324f5a3d88 *R/spatial_desc.R
 a15060ec24914b714e295d101470700f *R/spatial_functions.R
-3720f8a890c39cf204716009ebe6e8f8 *R/strat_collapse.R
+7e6a3c73bc7c06b8332bd02696b7b9dc *R/strat_collapse.R
 c8c889e77baaf26848826e6d716775e2 *R/strata_options.R
 22cf0b30da98b39fd2946aa2d27cea0e *R/table_functions.R
 e70c4740566fd74e289bac9395f563c2 *R/table_options.R
@@ -68,9 +67,10 @@ fd850f0cc19381c097ec4f924706e3ce *R/wtcalc_unit.R
 de4a04789ef279fd907ab214283cacb2 *data/ref_codes.rda
 b5fb393153e188e622499b3bff574d3c *data/ref_diacl2in.rda
 fddf64bcca4f0893e632f83bd13c22e8 *data/ref_domain.rda
-a9af8a80f2b9c22ada3ab2b5da0fad3c *data/ref_estvar.rda
+9e45507226959ce44a327720fdbb99fa *data/ref_estvar.rda
 c7f18c99c6440b13f1117640ae954334 *data/ref_statecd.rda
 15b07d9697ab9a8934677ea94b020520 *data/stunitco.rda
+9a4faed4fb653ad04b1d0f06e259418d *inst/COPYRIGHTS
 59110df07c50e5b87463e70375bb7376 *man/DBtestPostgreSQL.Rd
 137b2346dbc76ceaeea3e670a637ffda *man/DBtestSQLite.Rd
 775570b1047ced1bd89f28bd8e71b8ca *man/DEFAULT_NODATA.Rd
@@ -80,7 +80,7 @@ f2dd28e3d028a173cfa3cd306ee2d412 *man/Rcpp_CmbTable-class.Rd
 b5cda6824eb768eadf5a370dd701be0e *man/checks_desc.Rd
 80535638187eb876903fe4964c0b4774 *man/datExportData.Rd
 1e35aa711f1a39832ee6a4b3ce2fefdc *man/estimation_desc.Rd
-5b84457cd4e28ffc3aabdfcb825f947a *man/internal_desc.Rd
+6a01994c0c84d2336b4e922532c642c0 *man/internal_desc.Rd
 e33b1bbcd7bba12b393cecb682153d08 *man/kindcd3old.Rd
 a54ac373680750f217cd29cc861ca13c *man/multest_options.Rd
 7c2489924e5c859c57a73d3212ff3b67 *man/pcheck_desc.Rd
