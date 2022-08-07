@@ -1,10 +1,11 @@
 #' @rdname internal_desc
 #' @export
-getadjfactorGB <- function(condx=NULL, treex=NULL, seedx=NULL, vcondsppx=NULL,
-	vcondstrx=NULL, tuniqueid="PLT_CN", cuniqueid="PLT_CN", vuniqueid="PLT_CN",
-	condid="CONDID", unitlut=NULL, unitvars=NULL, strvars=NULL, unitarea=NULL,
-	areavar=NULL, areawt="CONDPROP_UNADJ", cvars2keep=NULL,
-	tpropvars=list(SUBP="SUBPPROP_UNADJ", MICR="MICRPROP_UNADJ", MACR="MACRPROP_UNADJ")){
+getadjfactorGB <- function(condx=NULL, treex=NULL, seedx=NULL, 
+     vcondsppx=NULL, vcondstrx=NULL, cond_dwm_calcx=NULL, 
+     tuniqueid="PLT_CN", cuniqueid="PLT_CN", vuniqueid="PLT_CN", duniqueid="PLT_CN",
+     condid="CONDID", unitlut=NULL, unitvars=NULL, strvars=NULL, unitarea=NULL, 
+     areavar=NULL, areawt="CONDPROP_UNADJ", cvars2keep=NULL, 
+     tpropvars=list(SUBP="SUBPPROP_UNADJ", MICR="MICRPROP_UNADJ", MACR="MACRPROP_UNADJ")){
 
   ####################################################################################
   ## DESCRIPTION:
@@ -70,6 +71,22 @@ getadjfactorGB <- function(condx=NULL, treex=NULL, seedx=NULL, vcondsppx=NULL,
     varadjlst <- c(varadjlst, unlist(tvaradj))
   }
 
+  ## Get list of condition-level variables to calculate adjustments for
+  if (!is.null(cond_dwm_calcx)) {
+    setkeyv(cond_dwm_calcx, c(cuniqueid, condid))
+#    dwmpropvars <- c("CONDPROP_CWD", "CONDPROP_FWD_SM", "CONDPROP_FWD_MD",
+#				"CONDPROP_FWD_LG", "CONDPROP_DUFF", "CONDPROP_PILE")
+#    varlst <- dwmpropvars[which(dwmpropvars %in% names(cond_dwm_calcx))]
+    if (length(varlst) == 0) {
+      stop("must include unadjusted variables in cond_dwm_calc")
+    }
+    varsumlst <- sapply(varlst, function(x) paste0(x, "_SUM"))
+    varadjlst <- sapply(varadjlst, function(x) sub("CONDPROP_", "", x))
+
+    condx <- merge(condx[, c(cuniqueid, condid, strunitvars), with=FALSE], cond_dwm_calcx)
+  }
+
+
   ###############################################################################
   ## Calculate adjustment factors by strata (and estimation unit) for variable list
   ## Sum condition variable(s) in varlst and divide by total number of plots in strata
@@ -95,13 +112,21 @@ getadjfactorGB <- function(condx=NULL, treex=NULL, seedx=NULL, vcondsppx=NULL,
 
   ## Change name of condition adjustment factor to cadjfac
   ## Note: CONDPPROP_UNADJ is the same as below (combination of MACR and SUBP)
-  cadjfacnm <- suppressMessages(checknm("cadjfac", names(condx)))
-  setnames(condx, areaadj, cadjfacnm)
-  setnames(unitlut, areaadj, cadjfacnm)
+  if (length(areawt) == 1 && areawt == "CONDPROP_UNADJ") {  
+    cadjfacnm <- suppressMessages(checknm("cadjfac", names(condx)))
+    setnames(condx, areaadj, cadjfacnm)
+    setnames(unitlut, areaadj, cadjfacnm)
 
-  ## Calculate adjusted condition proportion for plots
-  areawtnm <- adjnm(areawt)
-  condx[, (areawtnm) := get(areawt) * get(cadjfacnm)]
+    ## Calculate adjusted condition proportion for plots
+    areawtnm <- adjnm(areawt)
+    condx[, (areawtnm) := get(areawt) * get(cadjfacnm)]
+  } else {
+    cadjfacnm <- varadjlst
+
+    ## Calculate adjusted condition proportion for plots
+    areawtnm <- adjnm(areawt)
+    condx[, (areawtnm) := Map("*", mget(cadjfacnm), mget(areawt))]
+  }
   setkeyv(condx, c(cuniqueid, condid))
 
   ## Calculate adjusted condition proportions for different size plots for trees

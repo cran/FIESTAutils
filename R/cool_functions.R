@@ -103,7 +103,8 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
 
   ## Check ext
   extlst <- c("sqlite", "sqlite3", "db", "db3", "csv", "txt", "gdb",
-		"shp", "gpkg", "jpg", "png", "tif", "img", "pdf", "rda", "rds")
+		"shp", "gpkg", "jpg", "png", "tif", "img", "pdf", 
+		"rda", "rds", "llo")
   if (!is.na(extfn) && extfn %in% extlst) {
     ext <- extfn
   } else if (!is.null(ext)) {
@@ -539,7 +540,7 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
     stop("name not found")
   } else if (sum(test) > 1) {
     testnames <- xvect[test]
-    test <- match(x, testnames)
+    test <- match(tolower(x), tolower(testnames))
     if (length(test) == 1) {
       return(testnames[test])
     } else {
@@ -562,10 +563,8 @@ chkdbtab <- function(dbtablst, tab, stopifnull=FALSE) {
       return(NULL)
     }
   }
-  if (tolower(tab) %in% dbtablst) {
-    return(tolower(tab))
-  } else if (toupper(tab) %in% dbtablst) {
-    return(toupper(tab))
+  if (tolower(tab) %in% tolower(dbtablst)) {
+    return(dbtablst[tolower(dbtablst) == tolower(tab)])
   } else {
     if (stopifnull) {
       stop(tab, " does not exist in database")

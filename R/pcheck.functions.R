@@ -438,7 +438,7 @@ pcheck.states <- function (states, statereturn="MEANING", gui=FALSE, RS=NULL,
   }
 
   ## Check state name(s)
-  if (!is.vector(states))
+  if (!is.vector(states)) 
     stop("states must be vector of codes or names")
 
   if (!all(states %in% c(ref_state$VALUE, ref_state$ABBR, ref_state$MEANING))) {
@@ -449,9 +449,9 @@ pcheck.states <- function (states, statereturn="MEANING", gui=FALSE, RS=NULL,
       states2 <- capfirst(states, allwords=TRUE)
 
       if (!all(states2 %in% c(ref_state$VALUE, ref_state$ABBR, ref_state$MEANING))) {
-        if (stopifnull) {
-          states.miss <- states[which(!states %in% c(ref_state$VALUE, ref_state$ABBR,
+        states.miss <- states[which(!states %in% c(ref_state$VALUE, ref_state$ABBR,
 		  ref_state$MEANING))]
+        if (length(states.miss) > 0) {
           stop("invalid states: ", states.miss)
         } else {
           return(NULL)
@@ -609,6 +609,9 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
 
   if (out_fmt %in% c("csv", "shp")) {
     outfolder <- pcheck.outfolder(outfolder)
+    if (append_layer) {
+      overwrite_layer <- FALSE
+    }
     return(list(out_dsn=NULL, outfolder=outfolder, out_fmt=out_fmt,
 		overwrite_layer=overwrite_layer, append_layer=append_layer,
 		outfn.date=outfn.date, outfn.pre=outfn.pre))
