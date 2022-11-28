@@ -532,23 +532,39 @@ recodelut <- function(lut, minvar="min", maxvar="max", classvar="class") {
 #' @rdname internal_desc
 #' @export
 findnm <- function(x, xvect, returnNULL=FALSE) {
+  if (is.null(x)) {
+    if (returnNULL) {
+      return(NULL)
+    } else {
+      stop("variable is NULL")
+    }
+  }
   test <- grepl(x, xvect, ignore.case=TRUE)
   if (sum(test) == 0) {
     if (returnNULL) {
       return(NULL)
     }
     stop("name not found")
-  } else if (sum(test) > 1) {
+  } else {
     testnames <- xvect[test]
     test <- match(tolower(x), tolower(testnames))
     if (length(test) == 1) {
+      if (is.na(test)) {
+        if (returnNULL) {
+          return(NULL)
+        } else {
+          stop("no matching names found")
+        }
+      }
       return(testnames[test])
     } else {
-      stop("more than 1 name found")
+      if (returnNULL) {
+        return(NULL)
+      } else {
+        stop("more than 1 name found")
+      }
     }
-  } else {
-    return(xvect[test])
-  }
+  } 
 }
 
 #' @rdname internal_desc

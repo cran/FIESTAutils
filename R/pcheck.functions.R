@@ -68,17 +68,17 @@ pcheck.varchar <- function(var2check, varnm=NULL, checklst, gui=FALSE, caption=N
     varnm <- "varnm"
   } else {
     if (!is.character(varnm)) {
-      warning("varnm must be a string")
+      warning("varnm must be a string\n")
     }
   }
-  #if (is.null(var2check) && stopifnull) stop(paste(varnm, "is NULL"))
+  #if (is.null(var2check) && stopifnull) stop(paste(varnm, "is NULL\n"))
   if (is.null(caption)) {
     caption <- paste0(varnm, "?")
   }
   if (is.null(warn)) {
     warn <- ifelse(!is.null(checklst) && length(checklst) < 6,
 		paste(varnm, "must be in following list:", toString(checklst)),
-		paste(varnm, "is invalid"))
+		paste(varnm, "is invalid\n"))
   }
 
   if (is.null(var2check) || any(is.na(var2check)) || length(var2check) == 0 || any(gsub(" ", "", var2check) == "")) {
@@ -89,7 +89,7 @@ pcheck.varchar <- function(var2check, varnm=NULL, checklst, gui=FALSE, caption=N
       }
     } else {
       if (stopifnull) {
-        stop(paste(varnm, "is NULL"))
+        stop(paste(varnm, "is NULL\n"))
       } else {
         return(NULL)
       }
@@ -116,7 +116,7 @@ pcheck.varchar <- function(var2check, varnm=NULL, checklst, gui=FALSE, caption=N
         if (multiple) {
           warn <- message("invalid variable: ",
 				toString(var2check[which(!var2check %in% checklst)]),
-				"\n possible values: ", toString(checklst))
+				"\n possible values: ", toString(checklst),"\n")
         }
         stop(warn)
       } else {
@@ -158,7 +158,7 @@ pcheck.dsn <- function(dsn, dbconnopen=TRUE) {
 #' @export
 pcheck.table <- function(tab=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=NULL,
 	caption=NULL, returnsf=TRUE, factors=FALSE, returnDT=TRUE, warn=NULL,
-	stopifnull=FALSE, nullcheck=FALSE, obj=FALSE, gui=FALSE){
+	stopifnull=FALSE, stopifinvalid=FALSE, nullcheck=FALSE, obj=FALSE, gui=FALSE){
 
   ## DESCRIPTION: This function checks the table parameter..  if NULL, it prompts the
   ##      user with gui options to select the table of interest.
@@ -305,7 +305,11 @@ pcheck.table <- function(tab=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=NULL,
       tab_dsn <- paste(tab_dsn, tab, sep="/")
       tabext <- getext(tab_dsn)
     } else {
-      stop(tabnm, " is invalid")
+      if (!stopifinvalid) {
+        return(NULL)
+      } else {
+        stop(tabnm, " is invalid")
+      }
     }
   }
 
@@ -315,7 +319,11 @@ pcheck.table <- function(tab=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=NULL,
     tabx <- pcheck.spatial(tab, dsn=tab_dsn)
   } else if (tabext %in% tabdblst) {
     if (is.null(tab) || !is.character(tab)) {
-      stop("tab is invalid")
+      if (!stopifinvalid) {
+        return(NULL)
+      } else {
+        stop("tab is invalid")
+      }
     }
     if (tabext %in% c("sqlite", "sqlite3", "db", "db3", "gpkg")) {
       dbconn <- DBtestSQLite(tab_dsn, dbconnopen=TRUE, showlist=FALSE)
@@ -431,7 +439,7 @@ pcheck.states <- function (states, statereturn="MEANING", gui=FALSE, RS=NULL,
         states <- ref_state[[statereturn]]
         message(paste("returning all states in", paste(RS, collapse=",")))
       } else {
-        if (stopifnull) stop("invalid state")
+        if (stopifnull) stop("invalid state\n")
         return(NULL)
       }
     }
@@ -452,7 +460,7 @@ pcheck.states <- function (states, statereturn="MEANING", gui=FALSE, RS=NULL,
         states.miss <- states[which(!states %in% c(ref_state$VALUE, ref_state$ABBR,
 		  ref_state$MEANING))]
         if (length(states.miss) > 0) {
-          stop("invalid states: ", states.miss)
+          stop("invalid states: ", states.miss, "\n")
         } else {
           return(NULL)
         }
@@ -1036,10 +1044,12 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
 
 #' @rdname pcheck_desc
 #' @export
-pcheck.params <- function(input.params, strata_opts=NULL,
-			unit_opts=NULL, table_opts=NULL, title_opts=NULL,
-			savedata_opts=NULL, multest_opts=NULL,
-			spMakeSpatial_opts=NULL) {
+pcheck.params <- function(input.params, strata_opts=NULL, 
+                 unit_opts=NULL, table_opts=NULL, title_opts=NULL,
+                 savedata_opts=NULL, multest_opts=NULL,
+                 spMakeSpatial_opts=NULL, eval_opts=NULL,
+                 xy_opts=NULL 
+                 ) {
   ## DESCRIPTION: function to check input list parameters
 
   if (!is.null(strata_opts)) {
@@ -1153,6 +1163,41 @@ pcheck.params <- function(input.params, strata_opts=NULL,
       spMakeSpatial.params <- names(spMakeSpatial_opts)[!names(spMakeSpatial_opts) %in% c("formallst", "input.params")]
       if (!all(spMakeSpatial.params %in% formallst.spMakeSpatial)) {
         miss <- spMakeSpatial.params[!spMakeSpatial.params %in% formallst.spMakeSpatial]
+        stop("invalid parameter: ", toString(miss))
+      }
+    }
+  }
+
+  if (!is.null(eval_opts)) {
+    if ("eval_opts" %in% input.params) {
+      if (!is.list(eval_opts)) {
+        eval_opts <- as.list(eval_opts)
+      }
+      if (is.null(names(eval_opts))) {
+        stop("must specify an evaluation timeframe for data extraction... \n", 
+	    "...see eval_opts parameter, (e.g., eval_opts=eval_options(Cur=TRUE))")
+      }
+      formallst.eval <- names(formals(eval_options))[-length(formals(eval_options))]
+      eval.params <- names(eval_opts)[!names(eval_opts) %in% c("formallst", "input.params")]
+      if (!all(eval.params %in% formallst.eval)) {
+        miss <- eval.params[!eval.params %in% formallst.eval]
+        stop("invalid parameter: ", toString(miss))
+      }
+    }
+  }
+
+  if (!is.null(xy_opts)) {
+    if ("xy_opts" %in% input.params) {
+      if (!is.list(xy_opts)) {
+        xy_opts <- as.list(xy_opts)
+      }
+      if (is.null(names(xy_opts))) {
+        stop("invalid xy_opts... see xy_options()")
+      }
+      formallst.xy <- names(formals(xy_options))[-length(formals(xy_options))]
+      xy.params <- names(xy_opts)[!names(xy_opts) %in% c("formallst", "input.params")]
+      if (!all(xy.params %in% formallst.xy)) {
+        miss <- xy.params[!xy.params %in% formallst.xy]
         stop("invalid parameter: ", toString(miss))
       }
     }

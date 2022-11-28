@@ -64,6 +64,7 @@ pcheck.table(
   returnDT = TRUE,
   warn = NULL,
   stopifnull = FALSE,
+  stopifinvalid = FALSE,
   nullcheck = FALSE,
   obj = FALSE,
   gui = FALSE
@@ -132,7 +133,9 @@ pcheck.params(
   title_opts = NULL,
   savedata_opts = NULL,
   multest_opts = NULL,
-  spMakeSpatial_opts = NULL
+  spMakeSpatial_opts = NULL,
+  eval_opts = NULL,
+  xy_opts = NULL
 )
 }
 \value{
