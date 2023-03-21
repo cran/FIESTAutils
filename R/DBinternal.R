@@ -8,6 +8,7 @@
 ## DBgetbyids		## Gets data from database from ids
 ## changeclass
 ## customEvalchk
+## addftypgrp         ## Appends forest type group codes to table
 
 
 #' @rdname internal_desc
@@ -454,7 +455,7 @@ getpfromqry <- function(dsn=NULL, evalid=NULL, plotCur=TRUE, pjoinid,
 #    } else {
 
       pfromqry <- paste0(SCHEMA., plotnm, " p
-		INNER JOIN
+		LEFT JOIN
 		(select statecd, unitcd, countycd, plot, max(", varCur, ") maxyr
 		from ", SCHEMA., plotnm, where.qry,
 		" group by statecd, unitcd, countycd, plot) pp
@@ -946,10 +947,10 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
           if (length(states) == 1) {
             names(invyrlst) <- states
           } else {
-            warning("using specified invyrs for all states")
+            message("using specified invyrs for all states")
             yrs <- invyrs
             invyrlst <- sapply(states, function(x) NULL)
-            for (st in states) invyrlst[st] <- yrs
+            for (st in states) invyrlst[[st]] <- yrs
           } 
         }
       } else if (length(invyrs) != length(states)) {
@@ -981,7 +982,7 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
             message("using specified invyrs for all states")
             yrs <- measyrs
             measyrlst <- sapply(states, function(x) NULL)
-            for (st in states) measyrlst[st] <- yrs
+            for (st in states) measyrlst[[st]] <- yrs
           } 
         }
       } else if (length(measyrs) != length(states)) {
@@ -1018,4 +1019,5 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
 		invyrs=invyrs, measyrs=measyrs, 
            invyrlst=invyrlst, measyrlst=measyrlst)
 }
+
 

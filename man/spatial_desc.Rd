@@ -5,7 +5,6 @@
 \alias{polyfix.sf}
 \alias{build.prj4str}
 \alias{trunc10shp}
-\alias{getEPSG}
 \alias{merge_extents}
 \alias{check.extents}
 \alias{getprjatt}
@@ -32,8 +31,6 @@ build.prj4str(
 )
 
 trunc10shp(x)
-
-getEPSG(prj = NULL, datum = NULL, zone = NULL)
 
 merge_extents(layer1, layer2)
 

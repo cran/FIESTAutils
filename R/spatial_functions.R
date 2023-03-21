@@ -116,6 +116,7 @@ build.prj4str <- function(prj, datum=NULL, ellps=NULL, zone=NULL, zoneS=FALSE,
   return(prj4str)
 }
 
+
 #' @rdname spatial_desc
 #' @export
 trunc10shp <- function(x) {
@@ -159,31 +160,6 @@ trunc10shp <- function(x) {
 
   return(list(shp=x, newnms=newnms))
 }
-
-#' @rdname spatial_desc
-#' @export
-getEPSG <- function(prj=NULL, datum=NULL, zone=NULL) {
-
-  #######################################################################
-  ## DESCRIPTION: Return table of potential EPSG codes and corresponding prj4str.
-  ##
-  ## ARGUMENTS:
-  ## prj - String. Projection ("longlat", "utm", "aea" (albers), "lcc" (Lambert))
-  ## datum - String. Datum ("WGS84", "NAD83", "NAD27")
-  ## zone - Number/String. If prj="utm", the UTM zone.
-  #######################################################################
-
-  lut <- EPSG <- rgdal::make_EPSG()
-  if (!is.null(prj))
-    lut <- lut[grep(paste0("+proj=", prj), lut$prj4), c("code", "prj4")]
-  if (!is.null(datum))
-    lut <- lut[grep(datum, lut$prj4), c("code", "prj4")]
-  if (!is.null(zone))
-    lut <- lut[grep(paste0("+zone=", zone), lut$prj4), c("code", "prj4")]
-
-  return(lut)
-}
-
 
 #' @rdname spatial_desc
 #' @export
@@ -377,21 +353,6 @@ areacalc.poly <- function(polyv, polyv_dsn=NULL, areaprj="aea", zone=NULL,
 }
 
 
-#writeESRIprj <- function(x) {
-  ## Adds *.prj file to folder with *.bil file.
-  ## Note: when using raster getData(), the files are written the working
-  ## 		working directory as *.bil files. When read back into R, GDAL
-  ## 		thinks it is in ESRI format (not sure why), but missing a *.prj file.
-  ##		So, if you want to read from file, you must write a *.prj file
-  ##		to the same directory.
-
-#  p4s <- sp::proj4string(x)
-#  xfn <- x@file@name
-
-#  rgdal::showWKT(p4s, morphToESRI = TRUE,
-#      file=paste0(dirname(xfn), "/", basename.NoExt(xfn), ".prj"))
-#}
-
 #' @rdname spatial_desc
 #' @export
 checksf.longlat <- function(x, nolonglat=TRUE, crs.default=NULL) {
@@ -551,10 +512,9 @@ sf_dissolve <- function(sflayer, col=NULL, areacalc=TRUE) {
 closest_poly <- function(x.centroid, ypoly, ypoly.att=NULL, nbr=NULL, returnsf=TRUE) {
   ## DESCRIPTION: Get polygon(s) in y closest to x (centroid or polygon)
 
-  a<- sf::st_distance(x.centroid, ypoly, by_element=TRUE)
-
-
-  ypoly$dist <- units::drop_units(sf::st_distance(x.centroid, ypoly, by_element=TRUE))
+  ## Changed because of error in sf version (sf_1.0-9)
+  ## 'length(x) == length(y) is not TRUE'
+  ypoly$dist <- as.vector(sf::st_distance(x.centroid, ypoly, by_element=FALSE)[1,])
   ypoly <- ypoly[order(ypoly$dist, decreasing=FALSE),]
   if (is.null(nbr)) nbr <- nrow(ypoly)
   ypoly.near <- ypoly[1:nbr,]
