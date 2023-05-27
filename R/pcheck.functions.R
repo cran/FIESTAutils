@@ -301,7 +301,6 @@ pcheck.table <- function(tab=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=NULL,
   if (is.null(tab_dsn)) {
     tab_dsn <- tab
   }
-
   if (!is.null(tab_dsn) && !file.exists(tab_dsn)) {
     ext <- extlst[sapply(extlst, function(x, tab_dsn)
 				file.exists(paste(tab_dsn, x, sep=".")), tab_dsn)]
@@ -361,12 +360,15 @@ pcheck.table <- function(tab=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=NULL,
         stop("tab is invalid")
       }
     }
+
     if (tabext %in% c("sqlite", "sqlite3", "db", "db3", "gpkg")) {
       dbconn <- DBtestSQLite(tab_dsn, dbconnopen=TRUE, showlist=FALSE)
       tablst <- DBI::dbListTables(dbconn)
       if (!tab %in% tablst) {
         if (tolower(tab) %in% tablst) {
           tab <- tolower(tab)
+        } else if (toupper(tab) %in% tablst) {
+          tab <- toupper(tab)
         } else {
           stop(tab, " not in ", tab_dsn)
         }
@@ -545,7 +547,6 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
   if (.Platform$OS.type=="windows") {
     Filters=rbind(Filters,obj=c("Rda Objects (*.rda)", "*.rda")) 
     Filters=rbind(Filters,obj=c("Rds Objects (*.rds)", "*.rds")) 
-    Filters=rbind(Filters,obj=c("llo Objects (*.rda)", "*.llo")) 
   }
 
   ## Set global variables
@@ -554,7 +555,7 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
   if (is.null(objnm)) objnm <- "obj"
   if (is.null(caption)) caption <- "Object?"
 
-  selectlst <- c("NONE", "object", "rda", "rds", "llo")
+  selectlst <- c("NONE", "object", "rda", "rds")
 
   ## Check gui
   if (gui && !.Platform$OS.type=="windows")
@@ -586,12 +587,6 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
         if (objfn == "") stop("")
         objx <- readRDS(file = objfn)
         #if (!is.list(objx)) stop("must be list object")
-      } else if (objresp == "llo") {
-        objfn <- choose.files(default=getwd(), caption=caption,
-			filters=Filters[c("llo", "All"),], multi=FALSE)
-        if (objfn == "") stop("")
-        objx <- largeList::readList(file = objfn)
-        if (!is.list(objx)) stop("must be list object")
       }
     }
     if (is.null(objx) && stopifnull) stop(paste(objnm, "is NULL"))
@@ -609,9 +604,6 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
           objx <- get(load(obj))
         } else if (objext == "rds") {
           objx <- readRDS(file = obj)
-        } else if (objext == "llo") {
-          objx <- largeList::readList(file = objfn)
-          if (!is.list(objx)) stop("must be list object")
         } else {
           stop("obj not supported")
         }
@@ -619,7 +611,7 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
         stop("file does not exist")
       } else if (any(is.na(getext(obj)))) {
         stop(objnm, " must be a list object or filename")
-      } else {
+      } else {F
         stop(objnm, " must be a list object or filename")
       }
     } else if (!is.list(obj)) {
