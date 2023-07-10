@@ -22,6 +22,14 @@
 # findnm
 # chkdbtab  Checks if table exists in list of database tables
 # RtoSQL    Convert logical R statement syntax to SQL syntax
+# int64tochar  convert columns with class integer64 to character
+# messagedf - write a df to screen
+# getSPGRPCD - get spgrpcd attribute(s) in ref_species from ref_statecd
+
+
+#' @rdname internal_desc
+#' @export
+exit <- function() { invokeRestart("abort") }
 
 
 #' @rdname internal_desc
@@ -177,7 +185,17 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
 					message(err)
 			} )
       if (is.null(test)) {
-        stop("permission denied")
+        test <- tryCatch(
+          unlink(nm),
+			warning=function(war) {
+             			#stop(war,"\n")
+             			stop("cannot overwrite file... permission denied\n")
+			}, error=function(err) {
+					message(err)
+			} )
+        if (is.null(test)) {
+          stop("permission denied")
+        }
       }
       message("overwriting ", nm, "...")
     }
@@ -387,12 +405,13 @@ getnm <- function (xvar, group=FALSE) {
 
 #' @rdname checks_desc
 #' @export
-checknm <- function(nm, nmlst) {
+checknm <- function(nm, nmlst, ignore.case=TRUE) {
   ## if nm already exists in nmlst, change nm to nm_*
   i <- 0
-  while (nm %in% nmlst) {
+  while (any(grepl(nm, nmlst, ignore.case=ignore.case))) {
+  #while (nm %in% nmlst) {
     i <- i + 1
-    nm <- paste(nm, i, sep="_")
+    nm <- paste(nm, 1, sep="_")
     message("name exists... changed name to ", nm)
   }
   return(nm)
@@ -538,7 +557,8 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
     if (returnNULL) {
       return(NULL)
     } else {
-      stop("variable is NULL")
+      warning("variable is NULL")
+      exit()
     }
   }
   test <- grepl(x, xvect, ignore.case=TRUE)
@@ -546,7 +566,8 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
     if (returnNULL) {
       return(NULL)
     }
-    stop("name not found")
+    warning("name not found")
+    exit()
   } else {
     testnames <- xvect[test]
     test <- match(tolower(x), tolower(testnames))
@@ -555,7 +576,8 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
         if (returnNULL) {
           return(NULL)
         } else {
-          stop("no matching names found")
+          warning("no matching names found")
+          exit()
         }
       }
       return(testnames[test])
@@ -563,7 +585,8 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
       if (returnNULL) {
         return(NULL)
       } else {
-        stop("more than 1 name found")
+        warning("more than 1 name found")
+        exit()
       }
     }
   } 
@@ -668,7 +691,45 @@ RtoSQL <- function(filter, x=NULL) {
   return(sql)
 }
 
+#' @rdname internal_desc
+#' @export
+int64tochar <- function(df) {
+  ## DESCRIPTION: convert columns with class integer64 to character
+  if (any(grepl("integer64", lapply(df, class)))) {
+    int64cols <- names(df)[grepl("integer64", lapply(df, class))]
+    df <- setDF(df)
+    df[int64cols] <- lapply(df[int64cols], as.character)
+  }
+  return(df)
+}
+
+#' @rdname internal_desc
+#' @export
+messagedf <- function(df) {
+  message(paste0(utils::capture.output(df), collapse = "\n"))
+}
 
 
-  
+#' @rdname internal_desc
+#' @export
+getSPGRPCD <- function(states) {
+  ## DESCRIPTION: get spgrpcd attribute(s) in ref_species from ref_statecd
+  ##				ordered by majority
+
+  states <- pcheck.states(states)
+  ref_state <- FIESTAutils::ref_statecd[FIESTAutils::ref_statecd$MEANING %in% states, ]
+
+  if (length(unique(ref_state$REGION_SPGRPCD)) == 1) {
+    grpnames <- paste0(unique(ref_state$REGION), "_SPGRPCD")
+    #grpcode <- grpnames
+  } else {
+    grpnames <- paste0(names(table(ref_state$REGION_SPGRPCD))[
+	   table(ref_state$REGION_SPGRPCD) == max(table(ref_state$REGION_SPGRPCD))], 
+			"_SPGRPCD")
+    #grpcode <- grpnames[1]
+  } 
+  return(grpnames)
+}
+
+
 

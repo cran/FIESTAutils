@@ -1,8 +1,8 @@
 #' @rdname write2_desc
 #' @export
-write2sqlite <- function(layer, SQLitefn, out_name=NULL, gpkg=FALSE,
+write2sqlite <- function(layer, SQLitefn=NULL, out_name=NULL, gpkg=FALSE,
  	outfolder=NULL, overwrite=FALSE, append_layer=FALSE, createnew=FALSE,
-	dbconnopen=FALSE, index.unique=NULL, index=NULL){
+	dbconn=NULL, dbconnopen=FALSE, index.unique=NULL, index=NULL){
   ###################################################################################
   ## DESCRIPTION: Internal function to write to csv file.
   ##
@@ -18,14 +18,16 @@ write2sqlite <- function(layer, SQLitefn, out_name=NULL, gpkg=FALSE,
   ####################################################################################
   appendtext <- ifelse(append_layer, "appending", "writing")
 
-  ## Check SQLite connection
-  ###########################################################
-  if (createnew) {
-    dbconn <- DBcreateSQLite(SQLitefn=SQLitefn, outfolder=outfolder, dbconnopen=TRUE,
+  if (is.null(dbconn) || !DBI::dbIsValid(dbconn)) {
+    ## Check SQLite connection
+    ###########################################################
+    if (createnew) {
+      dbconn <- DBcreateSQLite(SQLitefn=SQLitefn, outfolder=outfolder, dbconnopen=TRUE,
 		gpkg=gpkg, overwrite=overwrite)
-  } else {
-    dbconn <- DBtestSQLite(SQLitefn=SQLitefn, outfolder=outfolder, dbconnopen=TRUE,
+    } else {
+      dbconn <- DBtestSQLite(SQLitefn=SQLitefn, outfolder=outfolder, dbconnopen=TRUE,
 		gpkg=gpkg, showlist=FALSE)
+    }
   }
 
   ## Check out_name
@@ -49,7 +51,7 @@ write2sqlite <- function(layer, SQLitefn, out_name=NULL, gpkg=FALSE,
   message(paste(appendtext, out_name, "to", SQLitefn))
 
   if (!is.null(index.unique) && !all(index.unique %in% names(layer))) {
-    message("invalid index.unique... names not in ", out_name)
+    warning("invalid index.unique... names not in ", out_name)
     index.unique <- NULL
   }
  
@@ -72,7 +74,7 @@ write2sqlite <- function(layer, SQLitefn, out_name=NULL, gpkg=FALSE,
     }
   }
   if (!is.null(index) && !all(index %in% names(layer))) {
-    message("invalid index... names not in layer")
+    warning("invalid index... names not in layer")
     index <- NULL
   }
 
