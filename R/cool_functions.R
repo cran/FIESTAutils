@@ -25,11 +25,7 @@
 # int64tochar  convert columns with class integer64 to character
 # messagedf - write a df to screen
 # getSPGRPCD - get spgrpcd attribute(s) in ref_species from ref_statecd
-
-
-#' @rdname internal_desc
-#' @export
-exit <- function() { invokeRestart("abort") }
+# date2char - convert date columns (POSIXct) to formatted character
 
 
 #' @rdname internal_desc
@@ -112,9 +108,11 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
   extfn <- getext(outfn)
 
   ## Check ext
+  DefaultExt <- c("grd", "asc", "sdat", "rst", "nc", "tif", "envi", 
+		"bil", "img", "vrt")
   extlst <- c("sqlite", "sqlite3", "db", "db3", "csv", "txt", "gdb",
-		"shp", "gpkg", "jpg", "png", "tif", "img", "pdf", 
-		"rda", "rds", "llo")
+		"shp", "gpkg", "jpg", "png", "pdf", "rda", "rds", "llo",
+           DefaultExt)
   if (!is.na(extfn) && extfn %in% extlst) {
     ext <- extfn
   } else if (!is.null(ext)) {
@@ -557,8 +555,7 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
     if (returnNULL) {
       return(NULL)
     } else {
-      warning("variable is NULL")
-      exit()
+      stop("variable is NULL")
     }
   }
   test <- grepl(x, xvect, ignore.case=TRUE)
@@ -566,8 +563,7 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
     if (returnNULL) {
       return(NULL)
     }
-    warning("name not found")
-    exit()
+    stop("name not found")
   } else {
     testnames <- xvect[test]
     test <- match(tolower(x), tolower(testnames))
@@ -576,8 +572,7 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
         if (returnNULL) {
           return(NULL)
         } else {
-          warning("no matching names found")
-          exit()
+          stop("no matching names found")
         }
       }
       return(testnames[test])
@@ -585,8 +580,7 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
       if (returnNULL) {
         return(NULL)
       } else {
-        warning("more than 1 name found")
-        exit()
+        stop("more than 1 name found")
       }
     }
   } 
@@ -597,19 +591,27 @@ findnm <- function(x, xvect, returnNULL=FALSE) {
 chkdbtab <- function(dbtablst, tab, stopifnull=FALSE) {
   ## DESCRIPTION: checks if table exists in list of database tables
   ## 		If doesn't exist, returns NULL, else returns table name
+  
+  ## check tab
   if (is.null(tab)) {
     if (stopifnull) {
       stop(tab, "is NULL")
     } else {
       return(NULL)
     }
+  } else if (!is.character(tab)) {
+	return(NULL)
   }
+  
+  ## check dtablst
+  if (!is.vector(dbtablst) || !is.character(dbtablst)) {
+	return(NULL)
+  }
+  
   if (tolower(tab) %in% tolower(dbtablst)) {
     return(dbtablst[tolower(dbtablst) == tolower(tab)])
   } else {
-    if (stopifnull) {
-      stop(tab, " does not exist in database")
-    }
+    message(tab, " does not exist in database")
     return(NULL)
   }
 }
@@ -621,7 +623,7 @@ RtoSQL <- function(filter, x=NULL) {
   ## DESCRIPTION: Convert logical R statement syntax to SQL syntax
 
   ## Check filter
-  if (is.null(filter)) {
+  if (is.null(filter) || filter == "") {
     return(NULL)
   }
 
@@ -658,6 +660,13 @@ RtoSQL <- function(filter, x=NULL) {
         part <- gsub("%in% c", "not in", part)
       } else {
         part <- gsub("%in% c", "in", part)
+		if (grepl(":", part)) {
+		  p1 <- strsplit(part, ":")[[1]][1]
+		  p1 <- strsplit(p1, "\\(")[[1]][2]
+		  p2 <- strsplit(part, ":")[[1]][2]
+		  p2 <- strsplit(p2, "\\)")[[1]][1]
+		  part <- gsub(paste0(p1, ":", p2), toString(seq(p1,p2)), part)	
+        }		  
       }
     }
 
@@ -732,4 +741,15 @@ getSPGRPCD <- function(states) {
 }
 
 
+#' @rdname internal_desc
+#' @export
+date2char <- function(df, col, formatstr = '%Y-%m-%d') {
+  ## DESCRIPTION: convert date columns (POSIXct) to formatted character
 
+  if (is.null(formatstr)) {
+    df[[col]] <- as.character(df[[col]])
+  } else {
+    df[[col]] <- as.character(format(df[[col]], formatstr))
+  }
+  return(df)
+}

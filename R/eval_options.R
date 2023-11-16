@@ -22,11 +22,11 @@
 #' evaluation period. See notes for more information about FIA Evaluations.
 #' @param Type String vector. Evaluation types ('ALL','CURR','VOL','P2VEG',
 #' DWM','INV','CHNG','GRM','REGEN'). If eval='FIA', Type is equivalent to
-#' plots for FIA Evaluations where 'ALL' includes nonsampled plots; 'VOL' 
-#' and 'CURR' include plots used for area or tree estimates; Type = 'GRM' 
-#' includes plots used for growth, removals, mortality; and Type = 'CHNG' 
-#' includes plots used for change estimates (See FIA database manual for 
-#' regioin availability and/or differences 
+#' plots for FIA Evaluations where 'ALL' includes nonsampled plots; 'CURR' 
+#' and 'VOL' include plots used for area or tree estimates, respectively; 
+#' Type = 'GRM' includes plots used for growth, removals, mortality; and 
+#' Type = 'CHNG' includes plots used for change estimates (See FIA database 
+#' manual for regioin availability and/or differences 
 #' (https://www.fia.fs.usda.gov/library/database-documentation/index.php) 
 #' If eval='custom', the associated tables are extracted for each Type. 
 #' Multiple Types are accepted.
@@ -35,6 +35,8 @@
 #' definition of INVYR. 
 #' @param measyrs Integer vector. eval='custom': defines specific
 #' measurement years of data (e.g., 2010:2015).
+#' @param varCur String. Name of variable to use for most current plot
+#'            ('MEASYEAR', 'INVYR').
 #' @param evalType Deprecated. Use Type instead.
 #' @param ... For extendibility.
 #' @return A list of user-supplied parameters and parameter values for strata.
@@ -52,12 +54,13 @@ eval_options <- function(Cur = FALSE,
                          evalid = NULL, 
                          invyrs = NULL, 
                          measyrs = NULL, 
-                         evalType = "VOL",                        
+                         varCur = "INVYR",                        
+                         evalType = NULL,
                          ...) {
 
   # Check input parameters
   input.params <- names(as.list(match.call()))[-1]
-  formallst <- c(names(formals(eval_options)), "evalType")
+  formallst <- c(names(formals(eval_options)))
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))
@@ -68,8 +71,8 @@ eval_options <- function(Cur = FALSE,
   
   # create list from input parameters
   l <- c(as.list(environment()), list(...))
-
-  if ("evalType" %in% names(l)) {
+ 
+  if ("evalType" %in% names(l) && !is.null(l$evalType)) {
     if ("Type" %in% names(l) && (length(Type) > 1 || l$Type != "VOL")) {
       l$Type <- l$Type
     } else {
@@ -85,4 +88,5 @@ eval_options <- function(Cur = FALSE,
   # return list
   return(l)
 }
+eval_options(Endyr=c(2017,2019), Type="VOL")
 

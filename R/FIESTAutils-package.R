@@ -110,6 +110,20 @@ NULL
 NULL
 
 
+#' Reference table - for generating tables.
+#'
+#' Table with row/column domain (VARNM) and their pretty names for table output
+#' (TABLENM).
+#'
+#'
+#' @name ref_evaltyp
+#' @docType data
+#' @format A dataframe with 3 columns, EVAL_TYP_CD, EVAL_TYP, DESCRIPTION.
+#' @source FIA look-up table.
+#' @keywords datasets
+NULL
+
+
 #' Reference table - state codes (STATECD).
 #'
 #' Table with state codes (VALUE), name (MEANING), abbreviation (ABBR), and
@@ -300,18 +314,34 @@ NULL
 NULL
 
 
-#' Reference table - for generating tables.
+#' Reference table - for conversion factors.
 #' 
-#' Table conversion factors from English to metric units.
+#' Table with conversion factors from English to metric units.
 #' 
 #' 
 #' @name ref_conversion
 #' @docType data
-#' @format A dataframe with 4 columns: TYPE, ENGLISH, METRIC, CONVERSION.
+#' @format A dataframe with 6 columns: TYPE, ENGLISH, ENGLISH_ABBR, METRIC, METRIC_ABBR, CONVERSION.
 #' @source Conversion table.
 #' @keywords datasets
 NULL
 
+
+#' Reference table - for variable units.
+#' 
+#' Table with units for TREE variables. The WOODLAND column was added
+#' to identify which variables include woodland species.The kg2tons
+#' column was added to identify which variables are commonly converted
+#' from kilograms to tons in estimation process.
+#' 
+#' 
+#' @name ref_units
+#' @docType data
+#' @format A dataframe with 4 columns: VARIABLE, UNITS, METRICUNITS, 
+#' WOODLAND, kg2tons.
+#' @source Units table.
+#' @keywords datasets
+NULL
 
 #' Reference table - Variable titles.
 #' 

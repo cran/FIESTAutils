@@ -12,6 +12,7 @@
 \alias{DBgetfn}
 \alias{getspconddat}
 \alias{getpfromqry}
+\alias{getwithqry}
 \alias{getEvalid.ppsa}
 \alias{getPlotCur}
 \alias{gui_filterdf}
@@ -19,10 +20,13 @@
 \alias{DBcreateSQLite}
 \alias{changeclass}
 \alias{customEvalchk}
+\alias{checkidx}
+\alias{createidx}
+\alias{dbclassify}
+\alias{dbclass}
 \alias{Ratio2Size}
 \alias{addCI}
 \alias{change10char}
-\alias{exit}
 \alias{getext}
 \alias{getoutfn}
 \alias{addcommas}
@@ -48,6 +52,7 @@
 \alias{int64tochar}
 \alias{messagedf}
 \alias{getSPGRPCD}
+\alias{date2char}
 \alias{strat.pivot}
 \alias{makedummy}
 \alias{preds.standardize}
@@ -143,12 +148,49 @@ getpfromqry(
   intensity1 = NULL,
   popSURVEY = FALSE,
   chk = FALSE,
+  Type = "VOL",
   syntax = "sql",
   plotnm = "plot",
   ppsanm = "pop_plot_stratum_assgn",
   ppsaid = "PLT_CN",
   surveynm = "survey",
-  plotobj = NULL
+  plotobj = NULL,
+  dbconn = NULL,
+  dbconnopen = TRUE
+)
+
+getwithqry(
+  dsn = NULL,
+  evalid = NULL,
+  states = NULL,
+  pjoinid,
+  plotCur = FALSE,
+  varCur = "MEASYEAR",
+  Endyr = NULL,
+  invyrs = NULL,
+  measyears = NULL,
+  allyrs = FALSE,
+  SCHEMA. = NULL,
+  invtype = "ANNUAL",
+  subcycle99 = FALSE,
+  designcd1 = FALSE,
+  intensity1 = NULL,
+  popSURVEY = FALSE,
+  chk = FALSE,
+  Type = "VOL",
+  syntax = "sql",
+  plotnm = "plot",
+  ppsanm = "pop_plot_stratum_assgn",
+  ppsaid = "PLT_CN",
+  surveynm = "survey",
+  PLOTdf = NULL,
+  pltflds = NULL,
+  POP_PLOT_STRATUM_ASSGNdf = NULL,
+  ppsaflds = NULL,
+  pvars = NULL,
+  dbconn = NULL,
+  dbconnopen = TRUE,
+  withqry2 = FALSE
 )
 
 getEvalid.ppsa(
@@ -198,6 +240,36 @@ customEvalchk(
   gui = FALSE
 )
 
+checkidx(dbconn, tbl = NULL, index_cols = NULL)
+
+createidx(dbconn, tbl, index_cols, unique = FALSE)
+
+dbclassify(
+  dbconn,
+  tabnm,
+  classcol,
+  cutbreaks,
+  cutlabels,
+  classnm = NULL,
+  overwrite = TRUE,
+  NAto0 = FALSE,
+  dbconnopen = TRUE,
+  quiet = FALSE
+)
+
+dbclass(
+  dbconn,
+  tabnm,
+  classcol,
+  classvals,
+  classlabels,
+  classnm = NULL,
+  overwrite = TRUE,
+  NAto0 = FALSE,
+  dbconnopen = TRUE,
+  quiet = FALSE
+)
+
 Ratio2Size(
   yn,
   y2n = NULL,
@@ -218,8 +290,6 @@ Ratio2Size(
 addCI(x, estnm, senm = NULL, conf.level = c(99, 95, 68), gainloss = FALSE)
 
 change10char(xnms)
-
-exit()
 
 getext(x)
 
@@ -283,6 +353,8 @@ int64tochar(df)
 messagedf(df)
 
 getSPGRPCD(states)
+
+date2char(df, col, formatstr = "\%Y-\%m-\%d")
 
 getext(x)
 

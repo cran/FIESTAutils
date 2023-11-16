@@ -1,5 +1,5 @@
 # pcheck.logical	- Checks logical function parameters
-# pcheck.unique	- Check for unique records
+# pcheck.unique	     - Check for unique records
 # pcheck.varchar	- Checks string variable parameter
 # pcheck.table
 # pcheck.outfolder
@@ -206,22 +206,56 @@ pcheck.table <- function(tab=NULL, conn=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=N
   if (gui && !.Platform$OS.type=="windows") {
     stop("gui not supported")
   }
+
   if (!is.null(conn)) {
-    if (!DBI::dbIsValid(conn)) {
-      warning("invalid database connection")
-      exit()
+    conntest <- tryCatch(DBI::dbIsValid(conn),
+                         error=function(err) {
+                           message("invalid database connection: ", conn, "\n")
+                           return(NULL)
+                           } )
+    if (is.null(conntest)) {
+      if (stopifnull) {
+        stop()
+      } else {
+        return(NULL)
+      }
     } else {
       tablst <- DBI::dbListTables(conn)
       if (is.character(tab) && length(tab) == 1) {
-        tab <- findnm(tab, tablst, returnNULL=TRUE)
-        if (is.null(tab) && stopifnull) {
-          warning("tab is NULL")
-          exit()
+        tabnm <- findnm(tab, tablst, returnNULL=TRUE)
+        if (is.null(tabnm)) {
+		  if (stopifnull) {
+            stop(tab, " is not in database")
+          } else {
+		    message(tab, " is not in database")
+		    return(NULL)
+		  }
+		}
+        if (!is.null(tabqry)) {
+          tabx <- tryCatch(DBI::dbGetQuery(conn, tabqry),
+			      error=function(e) {
+			      #print(e)
+			      return(NULL)})
+          if (is.null(tabx)) {
+            message("tabqry is invalid")
+			return(NULL)
+          } else {
+            tab <- tabx
+          }
+        } else {
+          tab <- DBI::dbReadTable(conn, tabnm)
         }
-        return(tab)
+        if (returnDT) {
+          return(setDT(tab))
+        } else {
+          return(tab)
+        }
       } else {
-        warning("invalid tab... must be character name in database")
-        exit()
+        if (stopifnull) {
+          stop("invalid tab... must be character name in database")
+        } else {
+          return(NULL)
+        }
       }
     }
   } else if (is.null(tab) && is.null(tab_dsn)) {
@@ -272,7 +306,7 @@ pcheck.table <- function(tab=NULL, conn=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=N
       if (obj && exists(tab, envir=.GlobalEnv) && is.data.frame(get(tab))) {
         #message(tab, " exists in Global Environment")
         return(get(tab))
-      } else if (file.exists(tab)) {
+      } else if (file.exists(tab) && !is.null(tab_dsn)) {
         tab_dsn <- tab
       }
     }
@@ -653,7 +687,9 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
     } else {
       if (any(unlist(lapply(objx[list.items], is.null)))) {
         listnames <- (names(which(unlist(lapply(objx[list.items], is.null)))))
-        stop("tables are null: ", toString(listnames))
+		if (stopifnull) {
+          stop("tables are null: ", toString(listnames))
+		}
       }
     }
   }
@@ -666,7 +702,7 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
 pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
 	outfn.pre=NULL, outfn.date=FALSE, overwrite_dsn=FALSE,
 	overwrite_layer=TRUE, add_layer=TRUE, append_layer=FALSE,
-	createSQLite=TRUE, gui=FALSE) {
+	createSQLite=TRUE, out_conn=NULL, dbconnopen=FALSE, gui=FALSE) {
 
   ## Check out_fmt
   ###########################################################
@@ -705,6 +741,19 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
   #if (!is.null(layer.pre) && (!is.vector(layer.pre) || length(layer.pre) > 1)) {
   #  stop("invalid layer.pre")
   #}
+ 
+  if (!is.null(out_conn) && DBI::dbIsValid(out_conn)) {
+    out_dsn <- DBI::dbGetInfo(out_conn)$dbname
+    outfolder <- NULL
+    if (append_layer) {
+      overwrite_layer <- FALSE
+    }
+ 
+    return(list(out_dsn=out_dsn, outfolder=outfolder, out_fmt=out_fmt,
+		overwrite_layer=overwrite_layer, append_layer=append_layer,
+		outfn.date=outfn.date, outfn.pre=outfn.pre, out_conn=out_conn))
+  }
+
 
   if (out_fmt %in% c("csv", "shp")) {
     outfolder <- pcheck.outfolder(outfolder)
@@ -751,6 +800,11 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
     if (any(out_fmt %in% c("sqlite", "gpkg")) && createSQLite) {
       gpkg <- ifelse(out_fmt == "gpkg", TRUE, FALSE)
       out_dsn <- DBcreateSQLite(out_dsn, gpkg=gpkg)
+
+      if (dbconnopen) {
+        out_conn <- DBI::dbConnect(RSQLite::SQLite(), out_dsn, 
+                    loadable.extensions = TRUE)
+      }
     }
   } else {
     out_dsn <- chkfn
@@ -769,7 +823,8 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
 
   return(list(out_fmt=out_fmt, outfolder=outfolder, out_dsn=out_dsn,
 	overwrite_dsn=overwrite_dsn, overwrite_layer=overwrite_layer,
-	add_layer=add_layer, append_layer=append_layer, outfn.date=outfn.date))
+	add_layer=add_layer, append_layer=append_layer, outfn.date=outfn.date,
+      out_conn=out_conn))
 }
 
 #' @rdname pcheck_desc
@@ -900,7 +955,7 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
       }
     } else if (methods::canCoerce(layer, "sf")) {
       return(sf::st_as_sf(layer, stringsAsFactors=stringsAsFactors))
-    } else if (is.character(layer) && file.exists(layer)) {
+    } else if (is.character(layer) && is.null(dsn) && file.exists(layer)) {
       dsn <- layer
     }
   }
@@ -1044,9 +1099,9 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
         #message("sql query not used")
 
         if (!is.na(sql)) {
-          sflayer <- tryCatch(suppressWarnings(sf::st_read(dsn=dsn, layer=layer, 
+          sflayer <- tryCatch(sf::st_read(dsn=dsn, layer=layer, 
 				query=paste0("select * from ", layer, " where ", sql),
-				stringsAsFactors=stringsAsFactors, quiet=TRUE)),
+				stringsAsFactors=stringsAsFactors, quiet=TRUE),
 				error=function(err) {
 					message(err, "\n")
 					return(NULL)
@@ -1116,7 +1171,13 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
     ## If polyfix
     ############################################################
     if (polyfix) {
-      splayer <- polyfix.sf(splayer)
+	
+	  ## check for empty geometry
+	  if (sum(sf::st_is_empty(splayer)) > 0) {
+	    splayer <- splayer[!sf::st_is_empty(splayer),]
+	  }
+      #splayer <- polyfix.sf(splayer)
+	  splayer <- sf::st_make_valid(splayer)
     }
 
     ## Drop geometry in table
