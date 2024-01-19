@@ -4,15 +4,16 @@
 %   R/fileexistsnm.R, R/getRefcodes.R, R/getRefobject.R, R/getadjfactorDWM.R,
 %   R/getadjfactorGB.R, R/getadjfactorP2VEG.R, R/getadjfactorPLOT.R,
 %   R/getadjfactorVOL.R, R/getfunnm.R, R/getlt10char.R, R/getrhat.R,
-%   R/groupStrata.R, R/groupUnits.R, R/internal_desc.R, R/save1tab.R,
-%   R/save2tabs.R, R/strat_collapse.R, R/subpsamp.R, R/subpsampP2VEG.R,
-%   R/table_functions.R, R/vector_proc.r, R/wtcalc.R, R/wtcalc_unit.R
+%   R/groupStrata.R, R/groupUnits.R, R/internal_desc.R, R/query_functions.R,
+%   R/save1tab.R, R/save2tabs.R, R/strat_collapse.R, R/subpsamp.R,
+%   R/subpsampP2VEG.R, R/table_functions.R, R/vector_proc.r, R/wtcalc.R,
+%   R/wtcalc_unit.R
 \name{DBvars.default}
 \alias{DBvars.default}
 \alias{DBgetfn}
 \alias{getspconddat}
 \alias{getpfromqry}
-\alias{getwithqry}
+\alias{getpwithqry}
 \alias{getEvalid.ppsa}
 \alias{getPlotCur}
 \alias{gui_filterdf}
@@ -24,6 +25,7 @@
 \alias{createidx}
 \alias{dbclassify}
 \alias{dbclass}
+\alias{getwithqry}
 \alias{Ratio2Size}
 \alias{addCI}
 \alias{change10char}
@@ -52,7 +54,9 @@
 \alias{int64tochar}
 \alias{messagedf}
 \alias{getSPGRPCD}
+\alias{addFORTYPGRPCD}
 \alias{date2char}
+\alias{checklevels}
 \alias{strat.pivot}
 \alias{makedummy}
 \alias{preds.standardize}
@@ -73,6 +77,7 @@
 \alias{groupStrata}
 \alias{groupUnits}
 \alias{internal_desc}
+\alias{getjoinqry}
 \alias{save1tab}
 \alias{save2tabs}
 \alias{strat.collapse}
@@ -159,7 +164,7 @@ getpfromqry(
   dbconnopen = TRUE
 )
 
-getwithqry(
+getpwithqry(
   dsn = NULL,
   evalid = NULL,
   states = NULL,
@@ -174,7 +179,7 @@ getwithqry(
   invtype = "ANNUAL",
   subcycle99 = FALSE,
   designcd1 = FALSE,
-  intensity1 = NULL,
+  intensity = NULL,
   popSURVEY = FALSE,
   chk = FALSE,
   Type = "VOL",
@@ -270,6 +275,40 @@ dbclass(
   quiet = FALSE
 )
 
+getwithqry(
+  dsn = NULL,
+  evalid = NULL,
+  states = NULL,
+  pjoinid,
+  plotCur = FALSE,
+  varCur = "MEASYEAR",
+  Endyr = NULL,
+  invyrs = NULL,
+  measyears = NULL,
+  allyrs = FALSE,
+  SCHEMA. = NULL,
+  invtype = "ANNUAL",
+  subcycle99 = FALSE,
+  designcd1 = FALSE,
+  intensity1 = FALSE,
+  popSURVEY = FALSE,
+  chk = FALSE,
+  Type = "VOL",
+  syntax = "sql",
+  plotnm = "plot",
+  ppsanm = "pop_plot_stratum_assgn",
+  ppsaid = "PLT_CN",
+  surveynm = "survey",
+  PLOTdf = NULL,
+  pltflds = NULL,
+  POP_PLOT_STRATUM_ASSGNdf = NULL,
+  ppsaflds = NULL,
+  pvars = NULL,
+  dbconn = NULL,
+  dbconnopen = TRUE,
+  withqry2 = FALSE
+)
+
 Ratio2Size(
   yn,
   y2n = NULL,
@@ -332,7 +371,7 @@ nbrdecimals(x)
 
 nbrdigits(x)
 
-getfilter(att, val, syntax = "R")
+getfilter(att, val, syntax = "R", quote = FALSE)
 
 filter2qry(filt, layernm)
 
@@ -354,11 +393,15 @@ messagedf(df)
 
 getSPGRPCD(states)
 
+addFORTYPGRPCD(cond)
+
 date2char(df, col, formatstr = "\%Y-\%m-\%d")
 
-getext(x)
+getfilter(att, val, syntax = "R", quote = FALSE)
 
-getfilter(att, val, syntax = "R")
+checklevels(x, uniquex, xvar)
+
+getext(x)
 
 filter2qry(filt, layernm)
 
@@ -503,6 +546,8 @@ groupUnits(
   photoratio = FALSE,
   keepvars = NULL
 )
+
+getjoinqry(joinid1, joinid2)
 
 save1tab(
   tab,
