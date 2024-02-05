@@ -1,5 +1,5 @@
-2d721ef6c01f09b0ba0e2dae7fa67e88 *DESCRIPTION
-0f360ffb4e7c696ac4db9a0ad161925e *NAMESPACE
+5489a59cc699bf81aa4b0ca0348d49a4 *DESCRIPTION
+984f0d200f89d4b571288a4dc421363c *NAMESPACE
 ccc63142371bd607aa3593791708d09a *NEWS.md
 2fa2ee4895c9fa0bd345b9f31732dc35 *R/DBinternal.R
 07f833fa92981b13a57947f9005fcdcb *R/DBtestPostgreSQL.R
@@ -17,7 +17,7 @@ a1330ef37a8be67f7c415ec40446243d *R/SAest.pbar.R
 dbb9ac5ba5b76e6d8380ccfb15e35bd3 *R/change10char.R
 6ef22245600cab38dfc653fcc561f09c *R/checks.R
 454487f6ff718eff2dfe134822b857a3 *R/checks_desc.R
-16689dc44c32e2648fe151c787446e88 *R/cool_functions.R
+b96ec1617917cc4acd2597ccb96b48e8 *R/cool_functions.R
 3105f93640f32fa993075015f3f5a9ba *R/cool_spfunctions.R
 209ad873c50066d50cb5c3a4f3ff5fd9 *R/datExportData.R
 402ae1a1b020be4ea14ab6d342d3d440 *R/estimation_desc.R
@@ -55,7 +55,7 @@ ff671df8fce81ec0b74d55f6fd882d84 *R/strat_collapse.R
 fe1c938d0d143b00d468edd07736b994 *R/strata_options.R
 db78b8be959556b36fda6d1e654f0819 *R/subpsamp.R
 807d69b885d0c8c631b2d754ef9994d9 *R/subpsampP2VEG.R
-e2244f87220c300765e05078529e2da3 *R/table_functions.R
+448213f60e4dce8ef293766556adc24a *R/table_functions.R
 e70c4740566fd74e289bac9395f563c2 *R/table_options.R
 008111eaecfa445140ff2c1ae65a0977 *R/title_options.R
 0a12b9d4ca4641c8154d4c1cc6cf8b09 *R/unit_options.R
@@ -70,12 +70,12 @@ bf00d4ed3f751fed71a75967d9288bdf *R/xy_options.R
 ddbd1de53e40c492928038f8531058b1 *README.md
 3c02544e37c09b5cc8ffc01bf5eb5100 *data/GDT_NAMES.rda
 5c32925d5fd11a5ee310804ad4528380 *data/kindcd3old.rda
-a15709019a113671a48a9cfa83500c2a *data/ref_codes.rda
+cd2cc87c9e782da8c4dd14ca15b87c48 *data/ref_codes.rda
 8e438500fe4b0f8849f1d885599bf22a *data/ref_cond.rda
 de4ce878d8c075eecf0ec9f4fc467e13 *data/ref_conversion.rda
 b5fb393153e188e622499b3bff574d3c *data/ref_diacl2in.rda
 217686dc4fb1eaea1885bdfdcf93cfb1 *data/ref_domain.rda
-ed86c2f44b846cba0dc7cf83a9dbf414 *data/ref_estvar.rda
+674205c3bfce0ce374dd0ff4bf546dbf *data/ref_estvar.rda
 2de6ed14687570d959a3b05d150a20c5 *data/ref_evaltyp.rda
 7e172da18bcfdce0b83d4c9a62620d37 *data/ref_plt.rda
 8014c32ccc72dfc1a52c539b7de2dc10 *data/ref_popType.rda
@@ -96,7 +96,7 @@ e58324941bb3060842e258aa570e8089 *man/checks_desc.Rd
 0f223d79cf317ee9a37fad0cf1a0b671 *man/datExportData.Rd
 525360a74d2a37b44cfc68135c21402e *man/estimation_desc.Rd
 4bd6923874d03897dbb1a29342d9aa2b *man/eval_options.Rd
-22283bfff51d76b7b05ad22358561990 *man/internal_desc.Rd
+03c060f48d11f2f7d426e25e464bafa6 *man/internal_desc.Rd
 e33b1bbcd7bba12b393cecb682153d08 *man/kindcd3old.Rd
 a54ac373680750f217cd29cc861ca13c *man/multest_options.Rd
 d6e9b63f065c9a60dc34a78cc61474e9 *man/pcheck_desc.Rd

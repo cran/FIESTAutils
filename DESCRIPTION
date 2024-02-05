@@ -1,8 +1,8 @@
 Package: FIESTAutils
 Type: Package
 Title: Utility Functions for Forest Inventory Estimation and Analysis
-Version: 1.2.1
-Date: 2024-01-19
+Version: 1.2.2
+Date: 2024-02-05
 Authors@R: 
     c(person(given = "Tracey",
              family = "Frescino",
@@ -37,13 +37,13 @@ BugReports: https://github.com/USDAForestService/FIESTAutils/issues
 Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-01-19 21:38:42 UTC; grayson
+Packaged: 2024-02-05 17:19:05 UTC; grayson
 Author: Tracey Frescino [aut],
   Chris Toney [aut],
   Grayson White [aut, cre],
   Joshua Yamamoto [aut]
 Maintainer: Grayson White <graysonwhite13@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-01-19 22:10:03 UTC
+Date/Publication: 2024-02-05 18:20:02 UTC
