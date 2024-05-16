@@ -1,8 +1,8 @@
 Package: FIESTAutils
 Type: Package
 Title: Utility Functions for Forest Inventory Estimation and Analysis
-Version: 1.2.2
-Date: 2024-02-05
+Version: 1.2.3
+Date: 2024-05-15
 Authors@R: 
     c(person(given = "Tracey",
              family = "Frescino",
@@ -27,8 +27,8 @@ Description: A set of tools for data wrangling, spatial data analysis,
     analyses on USDA Forest Service data.
 Depends: R (>= 4.2.0)
 Imports: data.table, DBI, gdalraster, graphics, hbsae, JoSAE, mase,
-        methods, nlme, Rcpp, RColorBrewer, RPostgreSQL, RSQLite, sae,
-        sf, sqldf, stats, terra, units, utils
+        methods, nlme, Rcpp, RColorBrewer, RPostgres, RSQLite, sae, sf,
+        sqldf, stats, terra, units, utils
 Suggests: knitr
 License: GPL-3
 Copyright: See file COPYRIGHTS for details.
@@ -39,11 +39,11 @@ LazyData: true
 LinkingTo: Rcpp
 RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-02-05 17:19:05 UTC; grayson
+Packaged: 2024-05-15 19:41:27 UTC; grayson
 Author: Tracey Frescino [aut],
   Chris Toney [aut],
   Grayson White [aut, cre],
   Joshua Yamamoto [aut]
 Maintainer: Grayson White <graysonwhite13@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-02-05 18:20:02 UTC
+Date/Publication: 2024-05-16 03:10:03 UTC

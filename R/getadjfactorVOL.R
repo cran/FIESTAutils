@@ -5,7 +5,8 @@ getadjfactorVOL <- function(adj=adj, condx=NULL, treex=NULL, seedx=NULL,
      	unitvars=NULL, strvars=NULL, unitarea=NULL, areavar=NULL, 
 	areawt="CONDPROP_UNADJ", cvars2keep=NULL,
 	cpropvars=list(SUBP="SUBPPROP_UNADJ", MACR="MACRPROP_UNADJ"),
-	tpropvars=list(SUBP="SUBPPROP_UNADJ", MACR="MACRPROP_UNADJ", MICR="MICRPROP_UNADJ")){
+	tpropvars=list(SUBP="SUBPPROP_UNADJ", MACR="MACRPROP_UNADJ", MICR="MICRPROP_UNADJ"),
+	keepadjvars=FALSE, adjvars=NULL){
 
   ####################################################################################
   ## DESCRIPTION:
@@ -83,7 +84,7 @@ getadjfactorVOL <- function(adj=adj, condx=NULL, treex=NULL, seedx=NULL,
     varsumlst <- unique(c(varsumlst, unlist(tvarsum)))
     varadjlst <- unique(c(varadjlst, unlist(tvaradj)))
   }
- 
+  
   ###############################################################################
   ## Calculate adjustment factors by strata (and estimation unit) for variable list
   ## Sum condition variable(s) in varlst and divide by total number of plots in strata
@@ -97,23 +98,37 @@ getadjfactorVOL <- function(adj=adj, condx=NULL, treex=NULL, seedx=NULL,
     unitlut <- pcheck.table(unitlut)
     unitarea <- pcheck.table(unitarea)
     setkeyv(unitlut, keyvars)
-
-    ## Sum condition variable(s) in varlst by strata and rename varlst to *_sum
-    cndadj <- condx[, lapply(.SD, sum, na.rm=TRUE), by=strunitvars, .SDcols=varlst]
-    setnames(cndadj, varlst, varsumlst)
-    setkeyv(cndadj, keyvars)
-
-    ## Merge condition adjustment factors to strata table.
-    unitlut <- unitlut[cndadj]
     if (!is.null(strvars)) n <- "n.strata"
 
-    ## Calculate adjustment factor for conditions
-    ## (divide summed condition proportions by total number of plots in strata)
-    unitlut[, (varadjlst) := lapply(.SD,
-	function(x, n) ifelse((is.na(x) | x==0), 0, get(n)/x), n), .SDcols=varsumlst]
+    if (keepadjvars) {
+	  if (areawt == "CONDPROP_UNADJ" && !areawt %in% names(unitlut) && 
+	                     "ADJ_FACTOR_MACR" %in% names(unitlut)) {
+		unitlut[, ADJ_FACTOR_COND := ifelse ((is.na(ADJ_FACTOR_MACR) | ADJ_FACTOR_MACR == 0), 
+			           ADJ_FACTOR_SUBP, ADJ_FACTOR_MACR)]
+		unitlut[unitlut$ESTN_UNIT == 71 & unitlut$STRATUMCD == 135,]
+
+		varadjlst <- unique(c("ADJ_FACTOR_COND", varadjlst))
+	  }
+    } else {
+
+      ## Sum condition variable(s) in varlst by strata and rename varlst to *_sum
+      cndadj <- condx[, lapply(.SD, sum, na.rm=TRUE), by=strunitvars, .SDcols=varlst]
+      setnames(cndadj, varlst, varsumlst)
+      setkeyv(cndadj, keyvars)
+
+      ## Merge condition adjustment factors to strata table.
+      unitlut <- unitlut[cndadj]
+    
+      ## Calculate adjustment factor for conditions
+      ## (divide summed condition proportions by total number of plots in strata)
+      unitlut[, (varadjlst) := lapply(.SD,
+	  function(x, n) ifelse((is.na(x) | x==0), 0, get(n)/x), n), .SDcols=varsumlst]
+	}
+#unitlut <- replacepopfun(unitlut, FIADBpop)
 
     ## Merge condition adjustment factors to cond table to get plot identifiers.
     setkeyv(condx, keyvars)
+    setkeyv(unitlut, keyvars)
     condx <- condx[unitlut[,c(strunitvars, varadjlst), with=FALSE]]
 
     ## Change name of condition adjustment factor to cadjfac
@@ -257,8 +272,10 @@ getadjfactorVOL <- function(adj=adj, condx=NULL, treex=NULL, seedx=NULL,
     condx[, (vars2removec) := NULL]
   }
   if (adj == "samp") {
-    vars2removeu <- vars2remove[vars2remove %in% names(condx)]
-    unitlut[, (vars2remove) := NULL]
+    vars2removeu <- vars2remove[vars2remove %in% names(unitlut)]
+	if (length(vars2removeu) > 0) {
+      unitlut[, (vars2removeu) := NULL]
+	}
   }
 
   ## Remove *_ADJFAC and *_UNADJ columns in condx

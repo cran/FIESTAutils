@@ -212,14 +212,15 @@ pcheck.table <- function(tab=NULL, conn=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=N
   if (is.object(tab) && is.data.frame(tab)) {
     conn <- NULL
   }	
+
   if (!is.null(conn)) {
     conntest <- tryCatch(DBI::dbIsValid(conn),
                          error=function(err) {
-                           message("invalid database connection: ", conn, "\n")
                            return(NULL)
                            } )
     if (is.null(conntest)) {
       if (stopifnull) {
+	    message("invalid database connection: ", conn, "\n")
         stop()
       } else {
         return(NULL)
@@ -365,19 +366,21 @@ pcheck.table <- function(tab=NULL, conn=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=N
       stop(tabnm, " must be an sf object or character layer name")
     }
   }
+
   if (is.null(tab_dsn)) {
     tab_dsn <- tab
   }
   if (!is.null(tab_dsn) && !file.exists(tab_dsn)) {
     ext <- extlst[sapply(extlst, function(x, tab_dsn)
 				file.exists(paste(tab_dsn, x, sep=".")), tab_dsn)]
-    if (length(ext) == 1)
+    if (length(ext) == 1 && ext == "shp")
         tab_dsn <- paste(tab_dsn, ext, sep=".")
   } else {
     if (is.null(tab)) return(NULL)
   }
-
+  
   tabext <- getext(tab_dsn)
+
   if (any(is.na(tabext)) || any(tabext == "NA")) {
     if (dir.exists(tab_dsn) && file.exists(paste(tab_dsn, tab, sep="/"))) {
       tab_dsn <- paste(tab_dsn, tab, sep="/")
@@ -386,8 +389,8 @@ pcheck.table <- function(tab=NULL, conn=NULL, tab_dsn=NULL, tabnm=NULL, tabqry=N
       if (!stopifinvalid) {
         return(NULL)
       } else {
-        stop(tabnm, " is invalid")
-      }
+        stop(tabnm, " is invalid")       
+	  }
     }
   }
 
@@ -761,7 +764,6 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
 		overwrite_layer=overwrite_layer, append_layer=append_layer,
 		outfn.date=outfn.date, outfn.pre=outfn.pre, out_conn=out_conn))
   }
-
 
   if (out_fmt %in% c("csv", "shp")) {
     outfolder <- pcheck.outfolder(outfolder)

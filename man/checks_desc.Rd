@@ -20,9 +20,9 @@ check.logic(
   stopifnull = FALSE,
   stopifinvalid = TRUE,
   removeinvalid = FALSE,
+  syntax = "R",
   returnvar = FALSE,
-  xvect = FALSE,
-  syntax = "R"
+  returnpart = FALSE
 )
 
 check.matchclass(
