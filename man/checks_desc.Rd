@@ -2,9 +2,11 @@
 % Please edit documentation in R/checks.R, R/checks_desc.R, R/cool_functions.R
 \name{check.numeric}
 \alias{check.numeric}
+\alias{check.logic.vars}
 \alias{check.logic}
 \alias{check.matchclass}
 \alias{check.matchval}
+\alias{check.unique}
 \alias{checks_desc}
 \alias{checkfilenm}
 \alias{checknm}
@@ -12,6 +14,8 @@
 \title{Check Functions}
 \usage{
 check.numeric(x)
+
+check.logic.vars(varlst, statement, ignore.case = FALSE, returnVars = FALSE)
 
 check.logic(
   x,
@@ -45,6 +49,8 @@ check.matchval(
   stopifmiss = FALSE,
   subsetrows = FALSE
 )
+
+check.unique(x, xvar, uniquex, NAname = "Other", addfactors = TRUE)
 
 checkfilenm(fn, outfolder = NULL, ext = NULL, stopifnull = FALSE)
 

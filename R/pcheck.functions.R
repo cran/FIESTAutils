@@ -10,6 +10,7 @@
 # pcheck.areaunits
 # pcheck.spatial - checks or gets Vector layer from file name or spatial object
 # pcheck.params - function to check input list parameters
+# pcheck.opts - function to check input parameter options
 
 #' @rdname pcheck_desc
 #' @export
@@ -710,18 +711,48 @@ pcheck.object <- function(obj=NULL, objnm=NULL, warn=NULL, caption=NULL,
 
 #' @rdname pcheck_desc
 #' @export
-pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
-	outfn.pre=NULL, outfn.date=FALSE, overwrite_dsn=FALSE,
-	overwrite_layer=TRUE, add_layer=TRUE, append_layer=FALSE,
-	createSQLite=TRUE, out_conn=NULL, dbconnopen=FALSE, gui=FALSE) {
+pcheck.output <- function(out_fmt = "csv", outsp_fmt = "shp", 
+                          out_dsn = NULL, outfolder = NULL,
+                          outfn.pre = NULL, outfn.date = FALSE, 
+                          overwrite_dsn = FALSE, overwrite_layer = TRUE, 
+                          add_layer = TRUE, append_layer = FALSE,
+                          createSQLite=FALSE, out_conn = NULL, 
+                          outconn = NULL,
+                          dbconnopen = FALSE, gui = FALSE, 
+                          savedata_opts = NULL) {
+  
+  if (!is.null(savedata_opts)) {
+    outfolder <- savedata_opts$outfolder
+    out_dsn <- savedata_opts$out_dsn
+    outfn.pre <- savedata_opts$outfn.pre
+    outfn.date <- savedata_opts$outfn.date
+    overwrite_dsn <- savedata_opts$overwrite_dsn
+    overwrite_layer <- savedata_opts$overwrite_layer
+    add_layer <- savedata_opts$add_layer
+    append_layer <- savedata_opts$append_layer
+    out_fmt <- savedata_opts$out_fmt
+    outsp_fmt <- savedata_opts$outsp_fmt
+    outconn = savedata_opts$outconn
+  } else {
+    if (is.null(outconn) && !is.null(out_conn)) {
+      outconn <- out_conn
+    }
+  }
 
-  ## Check out_fmt
+  ## check out_fmt
   ###########################################################
   #out_fmtlst <- c('sqlite', 'sqlite3', 'db', 'db3', 'gpkg', 'csv', 'gdb', 'shp')
   out_fmtlst <- c('sqlite', 'sqlite3', 'db', 'db3', 'gpkg', 'csv', 'shp')
   out_fmt <- pcheck.varchar(out_fmt, varnm="out_fmt", checklst=out_fmtlst,
 		caption="Out format", gui=gui)
-
+  
+  ## check out_fmt
+  ###########################################################
+  outsp_fmtlst <- c('sqlite', 'sqlite3', 'db', 'db3', 'gpkg', 'shp')
+  outsp_fmt <- pcheck.varchar(outsp_fmt, varnm="outsp_fmt", checklst=outsp_fmtlst,
+                            caption="Out spatial format", gui=gui)
+  
+  
   ## check outfn.date
   outfn.date <- pcheck.logical(outfn.date, varnm="outfn.date",
 		title="outfn.date", first="NO", gui=gui)
@@ -752,31 +783,53 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
   #if (!is.null(layer.pre) && (!is.vector(layer.pre) || length(layer.pre) > 1)) {
   #  stop("invalid layer.pre")
   #}
- 
-  if (!is.null(out_conn) && DBI::dbIsValid(out_conn)) {
-    out_dsn <- DBI::dbGetInfo(out_conn)$dbname
+
+  if (!is.null(outconn)) {
+    outconnchk <- tryCatch(
+      DBI::dbIsValid(outconn),
+                 error = function(e) {
+                 return(NULL) })
+    if (is.null(outconnchk)) {
+      message("outconn is invalid...\n", outconn)
+      stop()
+    }  
+    
+    ## check out_fmt
+    outconn_class <- class(outconn)
+    if (outconn_class == "SQLiteConnection") {
+      if (out_fmt != "sqlite") out_fmt <- "sqlite"
+    } else if (outconn_class == "PqConnection") {
+      if (out_fmt != "postgres") out_fmt <- "postgres"
+    }
+
+    out_dsn <- DBI::dbGetInfo(outconn)$dbname
     outfolder <- NULL
     if (append_layer) {
       overwrite_layer <- FALSE
     }
  
-    return(list(out_dsn=out_dsn, outfolder=outfolder, out_fmt=out_fmt,
-		overwrite_layer=overwrite_layer, append_layer=append_layer,
-		outfn.date=outfn.date, outfn.pre=outfn.pre, out_conn=out_conn))
+    return(list(out_dsn = out_dsn, outfolder = outfolder, 
+                out_fmt = out_fmt,
+		            overwrite_layer = overwrite_layer, 
+		            append_layer = append_layer,
+		            outfn.date = outfn.date, outfn.pre = outfn.pre, 
+		            outconn = outconn))
   }
-
-  if (out_fmt %in% c("csv", "shp")) {
+  
+  if (is.null(out_dsn) && any(c(out_fmt, outsp_fmt) %in% c("csv", "shp"))) {
     outfolder <- pcheck.outfolder(outfolder)
     if (append_layer) {
       overwrite_layer <- FALSE
     }
-    return(list(out_dsn=NULL, outfolder=outfolder, out_fmt=out_fmt,
-		overwrite_layer=overwrite_layer, append_layer=append_layer,
-		outfn.date=outfn.date, outfn.pre=outfn.pre))
+    return(list(out_dsn = NULL, outfolder = outfolder, 
+                out_fmt = out_fmt,
+                outsp_fmt = outsp_fmt,
+		            overwrite_layer = overwrite_layer, 
+		            append_layer = append_layer,
+		            outfn.date = outfn.date, outfn.pre = outfn.pre))
   }
 
   ## Check file name
-  ###########################################################
   chkfn <- checkfilenm(out_dsn, outfolder=outfolder)
   if (is.null(chkfn)) {
     ext <- "db"
@@ -804,15 +857,19 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
   }
  
   if (is.null(chkfn) || overwrite_dsn || !overwrite_dsn) {
-    out_dsn <- getoutfn(out_dsn, outfn.pre=outfn.pre, outfolder=outfolder,
-		outfn.date=outfn.date, overwrite=overwrite_dsn, outfn.default="data",
-		ext=ext, add=add_layer, append=append_layer)
+    out_dsn <- getoutfn(out_dsn, outfn.pre = outfn.pre, 
+                        outfolder = outfolder,
+		                    outfn.date = outfn.date, 
+		                    overwrite = overwrite_dsn, 
+		                    outfn.default = "data",
+		                    ext = ext, add = add_layer, 
+		                    append = append_layer)
     if (any(out_fmt %in% c("sqlite", "gpkg")) && createSQLite) {
       gpkg <- ifelse(out_fmt == "gpkg", TRUE, FALSE)
       out_dsn <- DBcreateSQLite(out_dsn, gpkg=gpkg)
 
       if (dbconnopen) {
-        out_conn <- DBI::dbConnect(RSQLite::SQLite(), out_dsn, 
+        outconn <- DBI::dbConnect(RSQLite::SQLite(), out_dsn, 
                     loadable.extensions = TRUE)
       }
     }
@@ -831,11 +888,17 @@ pcheck.output <- function(out_fmt="csv", out_dsn=NULL, outfolder=NULL,
     overwrite_dsn <- FALSE
   }
 
-  return(list(out_fmt=out_fmt, outfolder=outfolder, out_dsn=out_dsn,
-	overwrite_dsn=overwrite_dsn, overwrite_layer=overwrite_layer,
-	add_layer=add_layer, append_layer=append_layer, outfn.date=outfn.date,
-      out_conn=out_conn))
+  return(list(out_fmt = out_fmt, 
+              outsp_fmt = outsp_fmt, 
+              outfolder = outfolder, 
+              out_dsn = out_dsn,
+	            overwrite_dsn = overwrite_dsn, 
+              overwrite_layer = overwrite_layer,
+	            add_layer = add_layer, append_layer = append_layer, 
+              outfn.date = outfn.date,
+              outconn = outconn))
 }
+
 
 #' @rdname pcheck_desc
 #' @export
@@ -889,6 +952,7 @@ pcheck.areaunits <- function(unitarea, areavar, areaunits, metric=FALSE) {
       stop("invalid units... cannot convert ", areaunits, " to ", outunits)
     }
   }
+  unitarea[[areavar]] <- NULL
   areavar <- areausedvar
   return(list(unitarea=unitarea, areavar=areavar, outunits=outunits))
 }
@@ -1043,10 +1107,9 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
   ## Check layer
   ######################################################
   layerlst <- tryCatch(sf::st_layers(dsn),
-				error=function(err) {
-					#message("", "\n")
-					return(NULL)
-				} )
+                       error = function(e) {
+                         message(e,"\n")
+                         return(NULL) })
   if (is.null(layerlst)) {
     if (file.exists(dsn)) {
       stop("file exists... but not spatial")
@@ -1071,11 +1134,11 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
     }
   }
   geomtype <- layerlst$geomtype[layerlst$name == layer][[1]]
- 
+
   if (!is.na(geomtype)) {
     if (!checkonly) {
       chkarc <- NULL
-      if (ext.dsn == "gdb") {
+      if (ext.dsn %in% c("gdb", "gpkg")) {
 #        if ("arcgisbinding" %in% rownames(utils::installed.packages())) {
 #          chkarc <- tryCatch(arcgisbinding::arc.check_product(),
 #				error=function(err) {
@@ -1110,20 +1173,21 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
 
         if (!is.na(sql)) {
           sflayer <- tryCatch(sf::st_read(dsn=dsn, layer=layer, 
-				query=paste0("select * from ", layer, " where ", sql),
-				stringsAsFactors=stringsAsFactors, quiet=TRUE),
-				error=function(err) {
-					message(err, "\n")
-					return(NULL)
-				} )
+				      query=paste0("select * from ", layer, " where ", sql),
+				      stringsAsFactors=stringsAsFactors, quiet=TRUE),
+				      error=function(err) {
+					      message(err, "\n")
+					      return(NULL)
+				      } )
         } else {
           sflayer <- tryCatch(sf::st_read(dsn=dsn, layer=layer,
-				stringsAsFactors=stringsAsFactors, quiet=TRUE),
-				error=function(err) {
-					message(err, "\n")
-					return(NULL)
-				} )
+				      stringsAsFactors=stringsAsFactors, quiet=TRUE),
+				      error=function(err) {
+					       message(err, "\n")
+					       return(NULL)
+				      } )
         }
+
         return(sflayer)
       }
     } else {
@@ -1181,13 +1245,21 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
     ## If polyfix
     ############################################################
     if (polyfix) {
-	
-	  ## check for empty geometry
-	  if (sum(sf::st_is_empty(splayer)) > 0) {
-	    splayer <- splayer[!sf::st_is_empty(splayer),]
-	  }
+      ## check for empty geometry
+      if (sum(sf::st_is_empty(splayer)) > 0) {
+        message("there is missing geometry")
+        splayer <- splayer[!sf::st_is_empty(splayer),]
+      }
       #splayer <- polyfix.sf(splayer)
-	  splayer <- sf::st_make_valid(splayer)
+      if (any(!sf::st_is_valid(splayer))) {
+	      splayer <- sf::st_make_valid(splayer)
+      }
+    } else {
+      
+      ## check for empty geometry
+      if (sum(sf::st_is_empty(splayer)) > 0) {
+        message("there is missing geometry... set polyfix = TRUE")
+      }
     }
 
     ## Drop geometry in table
@@ -1206,12 +1278,12 @@ pcheck.spatial <- function(layer=NULL, dsn=NULL, sql=NA, fmt=NULL, tabnm=NULL,
 
 #' @rdname pcheck_desc
 #' @export
-pcheck.params <- function(input.params, strata_opts=NULL, 
-                 unit_opts=NULL, table_opts=NULL, title_opts=NULL,
-                 savedata_opts=NULL, multest_opts=NULL,
-                 spMakeSpatial_opts=NULL, eval_opts=NULL,
-                 xy_opts=NULL 
-                 ) {
+pcheck.params <- function(input.params, strata_opts = NULL, 
+                 unit_opts = NULL, table_opts = NULL, title_opts = NULL,
+                 savedata_opts = NULL, multest_opts = NULL,
+                 spMakeSpatial_opts = NULL, eval_opts = NULL,
+                 xy_opts = NULL, database_opts = NULL,
+                 datSum_opts = NULL) {
   ## DESCRIPTION: function to check input list parameters
 
   if (!is.null(strata_opts)) {
@@ -1279,6 +1351,7 @@ pcheck.params <- function(input.params, strata_opts=NULL,
       }
     }
   }
+
   if (!is.null(savedata_opts)) {
     if ("savedata_opts" %in% input.params) {
       if (!is.list(savedata_opts)) {
@@ -1365,6 +1438,494 @@ pcheck.params <- function(input.params, strata_opts=NULL,
     }
   }
 
+  if (!is.null(database_opts)) {
+    if ("database_opts" %in% input.params) {
+      if (!is.list(database_opts)) {
+        database_opts <- as.list(database_opts)
+      }
+      if (is.null(names(database_opts))) {
+        stop("invalid database_opts... see database_options()")
+      }
+      formallst.db <- names(formals(database_options))[-length(formals(database_options))]
+      database.params <- names(database_opts)[!names(database_opts) %in% c("formallst", "input.params")]
+      if (!all(database.params %in% formallst.db)) {
+        miss <- database.params[!database.params %in% formallst.db]
+        stop("invalid parameter: ", toString(miss))
+      }
+    }
+  }
+  
+  if (!is.null(datSum_opts)) {
+    if ("datSum_opts" %in% input.params) {
+      if (!is.list(datSum_opts)) {
+        datSum_opts <- as.list(datSum_opts)
+      }
+      if (is.null(names(datSum_opts))) {
+        stop("invalid datSum_opts... see datSum_options()")
+      }
+      formallst.datSum <- names(formals(datSum_options))[-length(formals(datSum_options))]
+      datSum.params <- names(datSum_opts)[!names(datSum_opts) %in% c("formallst", "input.params")]
+      if (!all(datSum.params %in% formallst.datSum)) {
+        miss <- datSum.params[!datSum.params %in% formallst.datSum]
+        stop("invalid parameter: ", toString(miss))
+      }
+    }
+  }
+  
+}
 
+
+#' @rdname pcheck_desc
+#' @export
+pcheck.opts <- function(optionlst) {
+  
+  ## Description:
+  ## This function sets default options.
+  
+  
+  ## Set empty returnlst
+  returnlst <- vector(mode = "list", length = length(optionlst))
+  names(returnlst) <- names(optionlst)
+  
+  
+  ## popFilters
+  ###################################################################
+  if ("popFilter" %in% names(optionlst)) {
+    popFilter <- optionlst$popFilter
+    
+    ## Set popFilters defaults
+    popFilters_defaults_list <- formals(popFilters)[-length(formals(popFilters))]
+    
+    for (i in 1:length(popFilters_defaults_list)) {
+      assign(names(popFilters_defaults_list)[[i]], popFilters_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied popFilters values
+    popFilter2 <- popFilters_defaults_list
+    if (length(popFilter) > 0) {
+      for (i in 1:length(popFilter)) {
+        if (names(popFilter)[[i]] %in% names(popFilters_defaults_list)) {
+          if (!is.null(popFilter[[i]])) {
+            popFilter2[[names(popFilter)[[i]]]] <- popFilter[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(popFilter)[[i]]))
+        }
+      }
+    }
+    returnlst$popFilter <- popFilter2
+  }
+  
+  
+  ## database options
+  ###################################################################
+  if ("database_opts" %in% names(optionlst)) {
+    database_opts <- optionlst$database_opts
+
+        ## Set database defaults
+    database_defaults_list <- formals(database_options)[-length(formals(database_options))]
+    for (i in 1:length(database_defaults_list)) {
+      assign(names(database_defaults_list)[[i]], database_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied database values
+    database_opts2 <- database_defaults_list
+    if (length(database_opts) > 0) {
+      #if (datsource != 'postgres') {
+      #  message("database_options only available for postgres datsource")
+      #}
+      for (i in 1:length(database_opts)) {
+        if (names(database_opts)[[i]] %in% names(database_defaults_list)) {
+          if (!is.null(database_opts[[i]])) {
+            database_opts2[[names(database_opts)[[i]]]] <- database_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(database_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$database_opts <- database_opts2
+  }
+  
+  
+  ## savedata options
+  ###################################################################
+  if ("savedata_opts" %in% names(optionlst)) {
+    savedata_opts <- optionlst$savedata_opts
+
+    ## Set savedata defaults
+    savedata_defaults_list <- formals(savedata_options)[-length(formals(savedata_options))]
+    for (i in 1:length(savedata_defaults_list)) {
+      assign(names(savedata_defaults_list)[[i]], savedata_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied savedata values
+    savedata_opts2 <- savedata_defaults_list
+    if (length(savedata_opts) > 0) {
+      for (i in 1:length(savedata_opts)) {
+        if (names(savedata_opts)[[i]] %in% names(savedata_defaults_list)) {
+          if (!is.null(savedata_opts[[i]])) {
+            savedata_opts2[[names(savedata_opts)[[i]]]] <- savedata_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(savedata_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$savedata_opts <- savedata_opts2 
+  }
+  
+  ## unit options
+  ###################################################################
+  if ("unit_opts" %in% names(optionlst)) {
+    unit_opts <- optionlst$unit_opts
+
+    ## Set unit defaults
+    unit_defaults_list <- formals(unit_options)[-length(formals(unit_options))]
+    for (i in 1:length(unit_defaults_list)) {
+      assign(names(unit_defaults_list)[[i]], unit_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied unit values
+    unit_opts2 <- unit_defaults_list
+    if (length(unit_opts) > 0) {
+      for (i in 1:length(unit_opts)) {
+        if (names(unit_opts)[[i]] %in% names(unit_defaults_list)) {
+          if (!is.null(unit_opts[[i]])) {
+            unit_opts2[[names(unit_opts)[[i]]]] <- unit_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(unit_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$unit_opts <- unit_opts2
+  }
+  
+  ## strata options
+  ###################################################################
+  if ("strata_opts" %in% names(optionlst)) {
+    strata_opts <- optionlst$strata_opts
+
+    ## Set strata defaults
+    strata_defaults_list <- formals(strata_options)[-length(formals(strata_options))]
+    for (i in 1:length(strata_defaults_list)) {
+      assign(names(strata_defaults_list)[[i]], strata_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied strata options
+    strata_opts2 <- strata_defaults_list
+    if (length(strata_opts) > 0) {
+      for (i in 1:length(strata_opts)) {
+        if (names(strata_opts)[[i]] %in% names(strata_defaults_list)) {
+          if (!is.null(strata_opts[[i]])) {
+            strata_opts2[[names(strata_opts)[[i]]]] <- strata_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(strata_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$strata_opts <- strata_opts2
+  }
+  
+  ## multest options
+  ###################################################################
+  if ("multest_opts" %in% names(optionlst)) {
+    multest_opts <- optionlst$multest_opts
+    
+    ## Set multest defaults
+    multest_defaults_list <- formals(multest_options)[-length(formals(multest_options))]
+    for (i in 1:length(multest_defaults_list)) {
+      assign(names(multest_defaults_list)[[i]], multest_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied multest options
+    multest_opts2 <- multest_defaults_list
+    if (length(multest_opts) > 0) {
+      for (i in 1:length(multest_opts)) {
+        if (names(multest_opts)[[i]] %in% names(multest_defaults_list)) {
+          if (!is.null(multest_opts[[i]])) {
+            multest_opts2[[names(multest_opts)[[i]]]] <- multest_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(multest_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$multest_opts <- multest_opts2
+  }
+  
+  ## table options
+  ###################################################################
+  if ("table_opts" %in% names(optionlst)) {
+    table_opts <- optionlst$table_opts
+    
+    ## Set table defaults
+    table_defaults_list <- formals(table_options)[-length(formals(table_options))]
+    for (i in 1:length(table_defaults_list)) {
+      assign(names(table_defaults_list)[[i]], table_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied table options
+    table_opts2 <- table_defaults_list
+    if (length(table_opts) > 0) {
+      for (i in 1:length(table_opts)) {
+        if (names(table_opts)[[i]] %in% names(table_defaults_list)) {
+          if (!is.null(table_opts[[i]])) {
+            table_opts2[[names(table_opts)[[i]]]] <- table_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(table_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$table_opts <- table_opts2
+  }
+  
+  ## title options
+  ###################################################################
+  if ("title_opts" %in% names(optionlst)) {
+    title_opts <- optionlst$title_opts
+    
+    ## Set title defaults
+    title_defaults_list <- formals(title_options)[-length(formals(title_options))]
+    for (i in 1:length(title_defaults_list)) {
+      assign(names(title_defaults_list)[[i]], title_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied title options
+    title_opts2 <- title_defaults_list
+    if (length(title_opts) > 0) {
+      for (i in 1:length(title_opts)) {
+        if (names(title_opts)[[i]] %in% names(title_defaults_list)) {
+          if (!is.null(title_opts[[i]])) {
+            title_opts2[[names(title_opts)[[i]]]] <- title_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(title_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$title_opts <- title_opts2
+  }
+  
+  
+  ## popTables
+  ###################################################################
+  if ("popTabs" %in% names(optionlst)) {
+    popTabs <- optionlst$popTabs
+    
+    ## Set popTables defaults
+    popTables_defaults_list <- formals(popTables)[-length(formals(popTables))]
+    for (i in 1:length(popTables_defaults_list)) {
+      assign(names(popTables_defaults_list)[[i]], popTables_defaults_list[[i]])
+    }  
+    
+    ## Set user-supplied popTabs options
+    popTabs2 <- popTables_defaults_list
+    if (length(popTabs) > 0) {
+      for (i in 1:length(popTabs)) {
+        if (names(popTabs)[[i]] %in% names(popTables_defaults_list)) {
+          if (!is.null(popTabs[[i]])) {
+            popTabs2[[names(popTabs)[[i]]]] <- popTabs[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(popTabs)[[i]]))
+        }
+      }
+    }
+    returnlst$popTabs <- popTabs2
+  }
+  
+  
+  ## popTableIDs
+  ###################################################################
+  if ("popTabIDs" %in% names(optionlst)) {
+    popTabIDs <- optionlst$popTabIDs
+    
+    ## Set popTableIDs defaults
+    popTableIDs_defaults_list <- formals(popTableIDs)[-length(formals(popTableIDs))]
+    for (i in 1:length(popTableIDs_defaults_list)) {
+      assign(names(popTableIDs_defaults_list)[[i]], popTableIDs_defaults_list[[i]])
+    }  
+    
+    ## Set user-supplied popTabIDs options
+    popTabIDs2 <- popTableIDs_defaults_list
+    if (length(popTabIDs) > 0) {
+      for (i in 1:length(popTabIDs)) {
+        if (names(popTabIDs)[[i]] %in% names(popTableIDs_defaults_list)) {
+          if (!is.null(popTabIDs[[i]])) {
+            popTabIDs2[[names(popTabIDs)[[i]]]] <- popTabIDs[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(popTabIDs)[[i]]))
+        }
+      }
+    }
+    returnlst$popTabIDs <- popTabIDs2
+  }
+  
+  
+  ## tableIDs
+  ###################################################################
+  if ("tabIDs" %in% names(optionlst)) {
+    tabIDs <- optionlst$tabIDs
+    
+    ## Set tableIDs defaults
+    tableIDs_defaults_list <- formals(tableIDs)[-length(formals(tableIDs))]
+    for (i in 1:length(tableIDs_defaults_list)) {
+      assign(names(tableIDs_defaults_list)[[i]], tableIDs_defaults_list[[i]])
+    }  
+    
+    ## Set user-supplied popTableIDs options
+    tabIDs2 <- tableIDs_defaults_list
+    if (length(tabIDs) > 0) {
+      for (i in 1:length(tabIDs)) {
+        if (names(tabIDs)[[i]] %in% names(tableIDs_defaults_list)) {
+          if (!is.null(tabIDs[[i]])) {
+            tabIDs2[[names(tabIDs)[[i]]]] <- tabIDs[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(tabIDs)[[i]]))
+        }
+      }
+    }
+    returnlst$tabIDs <- tabIDs2
+  }
+  
+  ## eval options
+  ###################################################################
+  if ("eval_opts" %in% names(optionlst)) {
+    eval_opts <- optionlst$eval_opts
+    
+    ## Set eval defaults
+    eval_defaults_list <- formals(eval_options)[-length(formals(eval_options))]
+    for (i in 1:length(eval_defaults_list)) {
+      assign(names(eval_defaults_list)[[i]], eval_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied eval options
+    eval_opts2 <- eval_defaults_list
+    if (length(eval_opts) > 0) {
+      for (i in 1:length(eval_opts)) {
+        if (names(eval_opts)[[i]] %in% names(eval_defaults_list)) {
+          if (!is.null(eval_opts[[i]])) {
+            eval_opts2[[names(eval_opts)[[i]]]] <- eval_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(eval_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$eval_opts <- eval_opts2
+  }
+  
+  
+  ## xy options
+  ###################################################################
+  if ("xy_opts" %in% names(optionlst)) {
+    xy_opts <- optionlst$xy_opts
+    
+    ## Set xy defaults
+    xy_defaults_list <- formals(xy_options)[-length(formals(xy_options))]
+    for (i in 1:length(xy_defaults_list)) {
+      assign(names(xy_defaults_list)[[i]], xy_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied xy options
+    xy_opts2 <- xy_defaults_list
+    if (length(xy_opts) > 0) {
+      for (i in 1:length(xy_opts)) {
+        if (names(xy_opts)[[i]] %in% names(xy_defaults_list)) {
+          if (!is.null(xy_opts[[i]])) {
+            xy_opts2[[names(xy_opts)[[i]]]] <- xy_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(xy_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$xy_opts <-xy_opts2
+  }
+  
+  
+  
+  ## datSum options
+  ###################################################################
+  if ("datSum_opts" %in% names(optionlst)) {
+    datSum_opts <- optionlst$datSum_opts
+    
+    ## Set datSum defaults
+    datSum_defaults_list <- formals(datSum_options)[-length(formals(datSum_options))]
+    for (i in 1:length(datSum_defaults_list)) {
+      assign(names(datSum_defaults_list)[[i]], datSum_defaults_list[[i]])
+    }
+    
+    ## Set user-supplied datSum values
+    datSum_opts2 <- datSum_defaults_list
+    if (length(datSum_opts) > 0) {
+      for (i in 1:length(datSum_opts)) {
+        if (names(datSum_opts)[[i]] %in% names(datSum_defaults_list)) {
+          if (!is.null(datSum_opts[[i]])) {
+            datSum_opts2[[names(datSum_opts)[[i]]]] <- datSum_opts[[i]]
+          }
+        } else {
+          stop(paste("Invalid parameter: ", names(datSum_opts)[[i]]))
+        }
+      }
+    }
+    returnlst$datSum_opts <- datSum_opts2
+  }
+  
+  
+    # ## Set popTabIDs defaults
+    # popTableIDs_defaults_list <- formals(popTableIDs)[-length(formals(popTableIDs))]
+    # 
+    # for (i in 1:length(popTableIDs_defaults_list)) {
+    #   if (names(popTableIDs_defaults_list)[[i]] == "cond") {
+    #     assign("cuniqueid", popTableIDs_defaults_list[[i]])
+    #     popTableIDs2[[names(popTableIDs)[[i]]]] <- strata_opts[[i]]
+    #     
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "plt") {
+    #     assign("puniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "tree") {
+    #     assign("tuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "seed") {
+    #     assign("suniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "vsubpspp") {
+    #     assign("vsppuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "vsubpstr") {
+    #     assign("vstruniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "invsubp") {
+    #     assign("invuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "subplot") {
+    #     assign("subpuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "subp_cond") {
+    #     assign("subcuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "cond_dwm_calc") {
+    #     assign("dwmuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "grm") {
+    #     assign("grmuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "plot_pplot") {
+    #     assign("pplotuniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    #   if (names(popTableIDs_defaults_list)[[i]] == "cond_pcond") {
+    #     assign("pconduniqueid", popTableIDs_defaults_list[[i]])
+    #   }
+    # }
+
+  return(returnlst)
 }
 

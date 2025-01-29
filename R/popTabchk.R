@@ -13,25 +13,33 @@ popTabchk <- function(tabnames, tabtext, tabs, tabIDs, dbtablst, dbconn, datindb
     tablst <- lapply(tabchk, function(x) tabs[[x]])
 
     #tablst <- names(tablst)[!duplicated(lapply(names(tablst), findnm, dbtablst, returnNULL = TRUE))]
-    if (!all(unlist(lapply(tablst, is.data.frame)))) {
+    tabdfchk <- unlist(lapply(tablst, is.data.frame))
+    if (any(tabdfchk)) {
+      tab <- names(tabdfchk)[tabdfchk]
+      tabid <- tabIDs[[tab]]
+      tabx <- pcheck.table(tablst[[tab]], tabnm = tabtext)
+    } else {
       tablst <- tablst[!duplicated(lapply(tablst, findnm, dbtablst, returnNULL = TRUE))]
     }
 
     if (!is.null(dbconn)) {
       dbtabchk <- sapply(tablst, findnm, dbtablst, returnNULL = TRUE)
-      dbtabchk <- names(dbtabchk)[!unlist(lapply(dbtabchk, is.null))]
-	    if (all(is.na(dbtabchk))) {
+      dbtabnmchk <- names(dbtabchk)[!unlist(lapply(dbtabchk, is.null))]
+	    if (all(is.na(dbtabnmchk))) {
 	      message("invalid name for ", tabtext, ": ", tab)
 	      return(0)
-	    } else if (length(dbtabchk) > 1) {
-	      dbtabchk <- dbtabchk[1]
+	    } else if (length(dbtabnmchk) > 1) {
+	      dbtabnmchk <- dbtabnmchk[1]
 	    }
-      tab <- tabs[[dbtabchk]]
-      tabid <- tabIDs[[dbtabchk]]
+
+      tab <- tabs[[dbtabnmchk]]
+      tabid <- tabIDs[[dbtabnmchk]]
       tabflds <- DBI::dbListFields(dbconn, tab)
-      tabnm <- tablst[[dbtabchk]]
+      tabnm <- findnm(tablst[[dbtabnmchk]], dbtablst)
+      
 	  } else {
 	    tabchk1 <- unlist(tabchk)[1]
+	 
       if (length(tabchk) > 1) {
         tab <- tabs[[tabchk1]]
         tabid <- tabIDs[[tabchk1]]

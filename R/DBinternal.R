@@ -18,11 +18,12 @@
 #' @rdname internal_desc
 #' @export
 DBvars.default <- function(istree=FALSE, isseed=FALSE, isveg=FALSE, isgrm=FALSE, 
-	isdwm=FALSE, issubp=FALSE, regionVars=FALSE, plotgeom=FALSE, regionVarsRS="RMRS") {
+	isdwm=FALSE, issubp=FALSE, regionVars=FALSE, plotgeom=FALSE, regionVarsRS="RMRS",
+	iscwd=FALSE) {
 
   ## Set global variables
   treevarlst=tsumvarlst=seedvarlst=ssumvarlst=vsubpsppvarlst=vsubpstrvarlst=
-	dwmlst=pgeomvarlst <- NULL
+	dwmlst=pgeomvarlst=cwdlst <- NULL
 
   ## DESCRIPTION: Set default variables for FIA plot data extraction
 
@@ -64,7 +65,7 @@ DBvars.default <- function(istree=FALSE, isseed=FALSE, isveg=FALSE, isgrm=FALSE,
   ################################  COND VARIABLES  ##################################
   ## Variables from FS_NIMS_FIADB_RMRS.COND
   condvarlst <- c("PLT_CN", "CONDID", "COND_STATUS_CD", "COND_NONSAMPLE_REASN_CD",
-	"RESERVCD", "OWNCD", "OWNGRPCD", "FORINDCD", "ADFORCD", "FORTYPCD", "FLDTYPCD",
+	"RESERVCD", "OWNCD", "OWNGRPCD", "ADFORCD", "FORTYPCD", "FLDTYPCD",
 	"MAPDEN", "STDAGE", "STDSZCD", "FLDSZCD", "SITECLCD", "SICOND", "SIBASE", "SISP",
 	"STDORGCD", "STDORGSP", "PROP_BASIS", "CONDPROP_UNADJ", "MICRPROP_UNADJ",
 	"SUBPPROP_UNADJ", "MACRPROP_UNADJ", "SLOPE", "ASPECT", "PHYSCLCD", "GSSTKCD", "ALSTKCD",
@@ -218,28 +219,38 @@ DBvars.default <- function(istree=FALSE, isseed=FALSE, isveg=FALSE, isgrm=FALSE,
 
     ## Variables from COND_DWM_CALC
     dwmvarlst <- c("PLT_CN", "CONDID", "CONDPROP_CWD", "CONDPROP_FWD_SM", "CONDPROP_FWD_MD",
-	"CONDPROP_FWD_LG", "CONDPROP_DUFF", "CWD_TL_COND", "CWD_TL_UNADJ", "CWD_TL_ADJ",
-	"CWD_LPA_COND", "CWD_LPA_UNADJ", "CWD_LPA_ADJ", "CWD_VOLCF_COND", "CWD_VOLCF_UNADJ",
-	"CWD_VOLCF_ADJ", "CWD_DRYBIO_COND", "CWD_DRYBIO_UNADJ", "CWD_DRYBIO_ADJ",
-	"CWD_CARBON_COND", "CWD_CARBON_UNADJ", "CWD_CARBON_ADJ", "FWD_SM_TL_COND",
-	"FWD_SM_TL_UNADJ", "FWD_SM_TL_ADJ", "FWD_SM_CNT_COND", "FWD_SM_VOLCF_COND",
-	"FWD_SM_VOLCF_UNADJ", "FWD_SM_VOLCF_ADJ", "FWD_SM_DRYBIO_COND", "FWD_SM_DRYBIO_UNADJ",
-	"FWD_SM_DRYBIO_ADJ", "FWD_SM_CARBON_COND", "FWD_SM_CARBON_UNADJ", "FWD_SM_CARBON_ADJ",
-	"FWD_MD_TL_COND", "FWD_MD_TL_UNADJ", "FWD_MD_TL_ADJ", "FWD_MD_CNT_COND",
-	"FWD_MD_VOLCF_COND", "FWD_MD_VOLCF_UNADJ", "FWD_MD_VOLCF_ADJ", "FWD_MD_DRYBIO_COND",
-	"FWD_MD_DRYBIO_UNADJ", "FWD_MD_DRYBIO_ADJ", "FWD_MD_CARBON_COND", "FWD_MD_CARBON_UNADJ",
-	"FWD_MD_CARBON_ADJ", "FWD_LG_TL_COND", "FWD_LG_TL_UNADJ", "FWD_LG_TL_ADJ",
-	"FWD_LG_CNT_COND", "FWD_LG_VOLCF_COND", "FWD_LG_VOLCF_UNADJ", "FWD_LG_VOLCF_ADJ",
-	"FWD_LG_DRYBIO_COND", "FWD_LG_DRYBIO_UNADJ", "FWD_LG_DRYBIO_ADJ", "FWD_LG_CARBON_COND",
-	"FWD_LG_CARBON_UNADJ", "FWD_LG_CARBON_ADJ", "PILE_SAMPLE_AREA_COND",
+	"CONDPROP_FWD_LG", "CONDPROP_DUFF", "CWD_TL_COND", "CWD_TL_UNADJ", 
+	"CWD_LPA_COND", "CWD_LPA_UNADJ", "CWD_VOLCF_COND", "CWD_VOLCF_UNADJ",
+	 "CWD_DRYBIO_COND", "CWD_DRYBIO_UNADJ", "CWD_CARBON_COND", "CWD_CARBON_UNADJ", "FWD_SM_TL_COND",
+	"FWD_SM_TL_UNADJ", "FWD_SM_CNT_COND", "FWD_SM_VOLCF_COND",
+	"FWD_SM_VOLCF_UNADJ", "FWD_SM_DRYBIO_COND", "FWD_SM_DRYBIO_UNADJ",
+	"FWD_SM_CARBON_COND", "FWD_SM_CARBON_UNADJ",
+	"FWD_MD_TL_COND", "FWD_MD_TL_UNADJ", "FWD_MD_CNT_COND",
+	"FWD_MD_VOLCF_COND", "FWD_MD_VOLCF_UNADJ", "FWD_MD_DRYBIO_COND",
+	"FWD_MD_DRYBIO_UNADJ", "FWD_MD_CARBON_COND", "FWD_MD_CARBON_UNADJ",
+	"FWD_MD_CARBON_ADJ", "FWD_LG_TL_COND", "FWD_LG_TL_UNADJ", 
+	"FWD_LG_CNT_COND", "FWD_LG_VOLCF_COND", "FWD_LG_VOLCF_UNADJ", 
+	"FWD_LG_DRYBIO_COND", "FWD_LG_DRYBIO_UNADJ", "FWD_LG_CARBON_COND",
+	"FWD_LG_CARBON_UNADJ", "PILE_SAMPLE_AREA_COND",
 	"PILE_SAMPLE_AREA_UNADJ", "PILE_SAMPLE_AREA_ADJ", "PILE_VOLCF_COND",
-	"PILE_VOLCF_UNADJ", "PILE_VOLCF_ADJ", "PILE_DRYBIO_COND", "PILE_DRYBIO_UNADJ",
-	"PILE_DRYBIO_ADJ", "PILE_CARBON_COND", "PILE_CARBON_UNADJ", "PILE_CARBON_ADJ",
+	"PILE_VOLCF_UNADJ", "PILE_DRYBIO_COND", "PILE_DRYBIO_UNADJ",
+	"PILE_CARBON_COND", "PILE_CARBON_UNADJ", 
 	"FUEL_DEPTH", "FUEL_BIOMASS", "FUEL_CARBON", "DUFF_DEPTH", "DUFF_BIOMASS",
 	"DUFF_CARBON", "LITTER_DEPTH", "LITTER_BIOMASS", "LITTER_CARBON", "DUFF_TC_COND",
-	"DUFF_TC_UNADJ", "DUFF_TC_ADJ", "AVG_WOOD_DENSITY")
+	"DUFF_TC_UNADJ", "AVG_WOOD_DENSITY")
 
     returnlst$dwmvarlst <- dwmvarlst
+  }
+  
+  
+  if (iscwd) {
+    
+    ## Variables from DWM_COARSE_WOODY_DEBRIS
+    cwdvarlst <- c("PLT_CN", "CONDID", "SPCD", "LPA_UNADJ", 
+                    "VOLCF_AC_UNADJ", "DRYBIO_AC_UNADJ", 
+                    "DRYBIO_AC_PLOT", "CARBON_AC_UNADJ")
+    
+    returnlst$cwdvarlst <- cwdvarlst
   }
 
   return(returnlst)
@@ -546,13 +557,13 @@ getpfromqry <- function(dsn=NULL, evalid=NULL, plotCur=TRUE, pjoinid,
 #' @export
 getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL, 
      pjoinid, plotCur = FALSE, varCur="MEASYEAR", Endyr=NULL, invyrs=NULL, 
-	 measyears = NULL, allyrs = FALSE, SCHEMA.=NULL, invtype = "ANNUAL",
+	   measyears = NULL, allyrs = FALSE, SCHEMA.=NULL, invtype = "ANNUAL",
      subcycle99 = FALSE, designcd1=FALSE, intensity=NULL, popSURVEY=FALSE, 
      chk=FALSE, Type = "VOL", syntax = "sql", plotnm = "plot", 
      ppsanm = "pop_plot_stratum_assgn", ppsaid = "PLT_CN", surveynm = "survey", 
      PLOTdf = NULL, pltflds = NULL, POP_PLOT_STRATUM_ASSGNdf = NULL, 
-	 ppsaflds = NULL, pvars = NULL, dbconn = NULL, dbconnopen = TRUE,
-	 withqry2 = FALSE) {
+	   ppsaflds = NULL, pvars = NULL, dbconn = NULL, dbconnopen = TRUE,
+	   withqry2 = FALSE) {
   ## DESCRIPTION: gets from statement for database query
   ## syntax - ('sql', 'R')
   ## evalid - Integer. EVALID code defining FIA Evaluation
@@ -601,29 +612,29 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
       if (!is.null(dbconn)) {
         pltflds <- DBI::dbListFields(dbconn, plotnm)
       } else if (!is.null(PLOTdf)) {
-	    pltflds <- names(PLOTdf)
-	  }
+	      pltflds <- names(PLOTdf)
+	    }
     }
   }
  
   ## Check pjoinid
   if (is.null(pjoinid)) {
-	if (!is.null(pltflds)) {
+	  if (!is.null(pltflds)) {
       pjoinid <- findnm("CN", pltflds, returnNULL=TRUE)	
-	  if (is.null(pjoinid)) {
+	    if (is.null(pjoinid)) {
         pjoinid <- findnm("PLT_CN", pltflds, returnNULL=TRUE)	
-		if (is.null(pjoinid)) {
-		  pjoinid <- "CN"
-		}
-	  }
+		    if (is.null(pjoinid)) {
+		      pjoinid <- "CN"
+		    }
+	    }
     } 		
   }
  
   ## Define plot select variables
   if (is.null(pvars)) {
-	selectpvars <- "p.*"
+	  selectpvars <- "p.*"
   } else {
-	selectpvars <- toString(paste0("p.", unique(c(pjoinid, pvars))))
+	  selectpvars <- toString(paste0("p.", unique(c(pjoinid, pvars))))
   }
 
   ###################################################################################
@@ -638,8 +649,8 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
  
     if (popSURVEY) {
       pfromqry <- paste0(pfromqry, 
-		"\n  INNER JOIN ", SCHEMA., surveynm, " survey 
-		ON (survey.CN = p.SRV_CN AND survey.ANN_INVENTORY = '", anntype, "')")
+		             "\n  INNER JOIN ", SCHEMA., surveynm, " survey 
+		             ON (survey.CN = p.SRV_CN AND survey.ANN_INVENTORY = '", anntype, "')")
     }
   }
 
@@ -653,9 +664,9 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
       if (!is.null(ppsanm)) {
         if (!is.null(dbconn)) {
           ppsaflds <- DBI::dbListFields(dbconn, ppsanm)
-		} else if (!is.null(POP_PLOT_STRATUM_ASSGNdf)) {
-		  ppsaflds <- names(POP_PLOT_STRATUM_ASSGNdf)
-	    }
+		    } else if (!is.null(POP_PLOT_STRATUM_ASSGNdf)) {
+		      ppsaflds <- names(POP_PLOT_STRATUM_ASSGNdf)
+	      }
       }
     }
 
@@ -668,36 +679,36 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
 	where.qry <- paste0(evalidnm, " in(", toString(evalid), ")")
 		
   } else if (!is.null(states)) { 
-	statenm <- findnm("STATECD", pltflds, returnNULL=TRUE)
-	if (!is.null(statenm)) {
-	  statenm <- "STATECD"
-	}
-	where.qry <- paste0("p.", statenm, " in(", toString(states), ")")
+	  statenm <- findnm("STATECD", pltflds, returnNULL=TRUE)
+	  if (!is.null(statenm)) {
+	    statenm <- "STATECD"
+	  }
+	  where.qry <- paste0("p.", statenm, " in(", toString(states), ")")
   }
 
   ## Add plot_status_cd to where statement
   if (any(Type == "All") || !is.null(evalid)) {
     where.qry <- where.qry
   } else {
-	plotstatusnm <- findnm("PLOT_STATUS_CD", pltflds, returnNULL=TRUE)
-	if (is.null(plotstatusnm)) {
-	  message("PLOT_STATUS_CD not in data... assuming all sampled plots")
-	} else {
-	  plotstatus.qry <- paste0("p.", plotstatusnm, " <> 3")
-	  if (syntax == 'R') plotstatus.qry <- gsub("<>", "!=", plotstatus.qry)
-	  if (where.qry == "") {
-	    where.qry <- plotstatus.qry
+	  plotstatusnm <- findnm("PLOT_STATUS_CD", pltflds, returnNULL=TRUE)
+	  if (is.null(plotstatusnm)) {
+	    message("PLOT_STATUS_CD not in data... assuming all sampled plots")
 	  } else {
+	    plotstatus.qry <- paste0("p.", plotstatusnm, " <> 3")
+	    if (syntax == 'R') plotstatus.qry <- gsub("<>", "!=", plotstatus.qry)
+	    if (where.qry == "") {
+	      where.qry <- plotstatus.qry
+	    } else {
         where.qry <- paste0(where.qry, " and ", plotstatus.qry)
+	    } 
 	  } 
-	} 
   }
   ## Add subcycle to where statement
   if (!is.null(subcycle99) && !subcycle99) {
-	subcyclenm <- findnm("SUBCYCLE", pltflds, returnNULL=TRUE)
-	if (is.null(subcyclenm)) {
-	  message("SUBCYCLE not in data... assuming all SUBCYCLE <> 99")
-	} else {
+	  subcyclenm <- findnm("SUBCYCLE", pltflds, returnNULL=TRUE)
+	  if (is.null(subcyclenm)) {
+	    message("SUBCYCLE not in data... assuming all SUBCYCLE <> 99")
+	  } else {
       subcycle.filter <- paste0("p.", subcyclenm, " <> 99")
       if (syntax == 'R') subcycle.filter <- gsub("<>", "!=", subcycle.filter)
       if (where.qry == "") {
@@ -705,8 +716,9 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
       } else {
         where.qry <- paste(paste(where.qry, subcycle.filter, sep=" and "))
       }
-	}
+	  }
   }
+
   ## Add intensity to where statement 
   if (!is.null(intensity)) {
     intensitynm <- findnm("INTENSITY", pltflds, returnNULL=TRUE)
@@ -760,15 +772,15 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
     ## Define group variables
     groupvars <- c("STATECD", "UNITCD", "COUNTYCD", "PLOT")
     if (!is.null(pltflds)) {
-	  pgroupvars <- sapply(groupvars, findnm, pltflds, returnNULL = TRUE)
-	  if (any(is.null(pgroupvars))) {
-	    missvars <- pgroupvars[is.null(pgroupvars)]
+	    pgroupvars <- sapply(groupvars, findnm, pltflds, returnNULL = TRUE)
+	    if (any(is.null(pgroupvars))) {
+	      missvars <- pgroupvars[is.null(pgroupvars)]
         if (length(missvars) > 1 || missvars != "unitcd") {
-		  warning("dataset must include statecd, countycd, and plot")
+		      warning("dataset must include statecd, countycd, and plot")
         }
-	  } else {
-	    groupvars <- as.vector(pgroupvars)
-	  }
+	    } else {
+	      groupvars <- as.vector(pgroupvars)
+	    }
     }
 
     ## Create WITH query
@@ -776,33 +788,33 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
 	  "WITH ",
 	  "\nmaxyear AS",
       "\n (SELECT distinct ", toString(paste0("p.", groupvars)), ", MAX(p.", varCur, ") maxyr  ",
-	  pfromqry)
+	       pfromqry)
 	  
-	if (!is.null(where.qry) || where.qry != "") {
+	  if (!is.null(where.qry) || where.qry != "") {
       withqry <- paste0(withqry,  " \n  WHERE ", where.qry)
     }
 	
-	withqry <- paste0(withqry,
+	  withqry <- paste0(withqry,
 	      "\n  GROUP BY ", toString(paste0("p.", groupvars)), ")")
 
-	## Add an query to get CN values
+	  ## Add an query to get CN values
     if (withqry2) {	
-	  withqry2 <- paste0(
+	     withqry2 <- paste0(
        "\np AS",   	
        "\n (SELECT ", selectpvars,
-	   "\n  FROM ", SCHEMA., plotnm, " p INNER JOIN maxyear ON(")
+	     "\n  FROM ", SCHEMA., plotnm, " p INNER JOIN maxyear ON(")
 	   
-	  for (i in 1:length(groupvars)) {
-	    gvar <- groupvars[i]
-	    withqry2 <- paste0(withqry2, "p.", gvar, " = maxyear.", gvar)	   
-	    if (i < length(groupvars)) {
-	      withqry2 <- paste0(withqry2, " and ")
+	    for (i in 1:length(groupvars)) {
+	      gvar <- groupvars[i]
+	      withqry2 <- paste0(withqry2, "p.", gvar, " = maxyear.", gvar)	   
+	      if (i < length(groupvars)) {
+	        withqry2 <- paste0(withqry2, " and ")
+	      }
 	    }
-	  }
-	  withqry2 <- paste0(withqry2, " and p.", varCur, " = maxyear.maxyr))")
+	    withqry2 <- paste0(withqry2, " and p.", varCur, " = maxyear.maxyr))")
 	 
-	  withqry <- paste0(withqry, ",", withqry2)
-	}
+	    withqry <- paste0(withqry, ",", withqry2)
+	  }
 
   } else if (!is.null(invyrs)) {
 
@@ -818,15 +830,15 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
 	
     ## Create WITH query
     withqry <- paste0(
-	  "WITH ",
-	  "\np AS",
+	    "WITH ",
+	    "\np AS",
       "\n (SELECT distinct ", selectpvars,
-	  pfromqry)	   
+	    pfromqry)	   
 	   
-	## Add invyrs to where statement 
+	  ## Add invyrs to where statement 
     invyrnm <- findnm("INVYR", pltflds, returnNULL=TRUE)
     if (is.null(invyrnm)) {
-	  message("INVYR variable not in data")
+	    message("INVYR variable not in data")
     } else {
       invyr.filter <- paste0("p.", invyrnm, " in(", toString(invyrs), ")")
       if (syntax == 'R') invyr.filter <- gsub("in\\(", "%in% c\\(", invyr.filter)
@@ -837,7 +849,7 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
       }
     }
 	   	  
-	if (!is.null(where.qry) || where.qry != "") {
+	  if (!is.null(where.qry) || where.qry != "") {
       withqry <- paste0(withqry,  " \n  WHERE ", where.qry, ")")
     }
 
@@ -855,15 +867,15 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
 	
     ## Create WITH query
     withqry <- paste0(
-	  "WITH ",
-	  "\np AS",
-      "\n (SELECT ", selectpvars,
-	  pfromqry)	   
+	             "WITH ",
+	             "\np AS",
+               "\n (SELECT ", selectpvars,
+	             pfromqry)	   
 	   
-	## Add invyrs to where statement 
+	  ## Add invyrs to where statement 
     measyrnm <- findnm("MEASYEAR", pltflds, returnNULL=TRUE)
     if (is.null(measyrnm)) {
-	  message("MEASYEAR variable not in data")
+	    message("MEASYEAR variable not in data")
     } else {
       measyr.filter <- paste0("p.", measyrnm, " in(", toString(measyears), ")")
       if (syntax == 'R') measyr.filter <- gsub("in\\(", "%in% c\\(", measyr.filter)
@@ -874,20 +886,20 @@ getpwithqry <- function(dsn = NULL, evalid = NULL, states = NULL,
       }
     }
 	   	  
-	if (!is.null(where.qry) || where.qry != "") {
+	  if (!is.null(where.qry) || where.qry != "") {
       withqry <- paste0(withqry,  " \n  WHERE ", where.qry, ")")
     }
 
   } else {
-  
+ 
     ## Create WITH query
     withqry <- paste0(
-	  "WITH ",
-	  "\np AS",
-      "\n (SELECT distinct ", selectpvars,
-	  pfromqry)
+	             "WITH ",
+	             "\np AS",
+               "\n (SELECT distinct ", selectpvars,
+	             pfromqry)
   
-	if (!is.null(where.qry) || where.qry != "") {
+	  if (!is.null(where.qry) || where.qry != "") {
       withqry <- paste0(withqry,  " \n  WHERE ", where.qry, ")")
     }	  
   }
@@ -1316,12 +1328,17 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
     measCur <- FALSE
     measEndyr=measEndyr.filter <- NULL
   }
- 
+
   ## Check INVYR(S) 
   ###########################################################
   if (!measCur || !is.null(invyrs) || !is.null(measyrs)) {
+
+    if (allyrs) {
+      return(list(measCur=measCur, allyrs=allyrs, 
+                  invyrs=invyrs, measyrs=measyrs))
+    }
     if ((is.null(invyrs) || length(invyrs) == 0) && 
-		(is.null(measyrs) || length(measyrs) == 0)) {
+		           (is.null(measyrs) || length(measyrs) == 0)) {
       if (is.null(invyrtab)) {
         return(NULL)
       } 
@@ -1333,21 +1350,25 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
         } else if ("STATECD" %in% names(invyrtab)) {
           stcd <- pcheck.states(state, "VALUE")
           stinvyrlst <- sort(invyrtab[invyrtab$STATECD == stcd, "INVYR"])
-        }        
+        }  
         if (allyrs) {
           invyr <- stinvyrlst
-        } else {
-          if (!gui) {
-            return(NULL)
-          }
+        } else if (gui) {
+          #if (!gui) {
+          #  return(NULL)
+          #}
           ## GET INVENTORY YEAR(S) FROM USER
           invyr <- select.list(as.character(stinvyrlst),
                          title = paste("Inventory year(s) -", stabbr), 
                          multiple = TRUE)
           if (length(invyr) == 0) stop("")
+        } else {
+          invyr <- stinvyrlst
+          allyrs <- TRUE
         }
         invyrlst[[state]] <- as.numeric(invyr)
       }
+
     } else if (!is.null(invyrs)) {
       if (!is(invyrs, "list")) {
         if (is.vector(invyrs) && is.numeric(invyrs)) {
@@ -1409,7 +1430,7 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
           stcd <- pcheck.states(state, "VALUE")
           names(invyrtab) <- toupper(names(invyrtab))
           yrnm <- ifelse("INVYR" %in% names(invyrtab), "INVYR", 
-			ifelse("MEASYEAR" %in% names(invyrtab), "MEASYEAR", "NONE"))
+			               ifelse("MEASYEAR" %in% names(invyrtab), "MEASYEAR", "NONE"))
           if (yrnm == "NONE") {
             stop("invyrtab is invalid")
           }           
@@ -1430,11 +1451,10 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
       }
     }
   }
-
   returnlst <- list(measCur=measCur, measEndyr=measEndyr, 
-		measEndyr.filter=measEndyr.filter, allyrs=allyrs, 
-		invyrs=invyrs, measyrs=measyrs, 
-           invyrlst=invyrlst, measyrlst=measyrlst)
+		                measEndyr.filter=measEndyr.filter, allyrs=allyrs, 
+		                invyrs=invyrs, measyrs=measyrs, 
+                    invyrlst=invyrlst, measyrlst=measyrlst)
 }
 
 
@@ -1455,7 +1475,7 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
   tblnm <- NULL
   
   if (is.character(dbconn)) {
-    message("must check an open connection")
+    message("must be an open connection to check")
 	return(NULL)
   }
 
@@ -1476,11 +1496,11 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
       tablst <- DBI::dbListTables(dbconn)
     } else {
       qry <- paste0(
-         "SELECT DISTINCT OBJECT_NAME 
-          FROM ALL_OBJECTS
-          WHERE OBJECT_TYPE = 'TABLE'
-		  AND OWNER = 'FS_FIADB'
-		  ORDER BY OBJECT_NAME")
+         "SELECT DISTINCT object_name 
+          FROM all_objects
+          WHERE object_type = 'TABLE'
+		  AND owner = 'FS_FIADB'
+		  ORDER BY object_name")
       tablst <- DBI::dbGetQuery(dbconn, qry)[,1]
     }
   
@@ -1488,7 +1508,7 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
     tblnm <- unique(unlist(sapply(tbl, findnm, tablst, returnNULL=TRUE)))
     if (is.null(tblnm)) {
       warning(tbl, " does not exist")
-	  message("tables in database: ", toString(tablst))
+	    message("tables in database: ", toString(tablst))
       return(0)
     }
   }
@@ -1496,14 +1516,16 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
   ## Check tbl
   ######################################################  
   if (datsource == "sqlite") {
-    index.qry <- paste0("SELECT name, tbl_name, sql", 
-                 "\nFROM sqlite_master",
-				 "\nWHERE type = 'index'")
+    index.qry <- paste0(
+      "SELECT name, tbl_name, sql", 
+      "\nFROM sqlite_master",
+			"\nWHERE type = 'index'")
     if (!is.null(tblnm)) {
-	  index.qry <- paste(index.qry,
-	               "\n   AND tbl_name in(", addcommas(tblnm, quotes=TRUE), ")",
-				   "\nORDER BY tbl_name")
-	}
+	    index.qry <- paste(
+	      index.qry,
+	      "\n   AND tbl_name in(", addcommas(tblnm, quotes=TRUE), ")",
+			  "\nORDER BY tbl_name")
+	  }
   } else {  ## datsource != 'sqlite'
     index.qry <- paste0("SELECT table_name, index_name", 
 	              "\nFROM all_indexes")
@@ -1511,37 +1533,40 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
 	if (!is.null(schema)) {
 	  if (!is.character(schema) || length(schema) > 1) {
 	    message("schema must be a character vector of length = 1")
-		return(0)
+		  return(0)
 	  }
 	  index.qry <- paste0(index.qry,
 				  "\nWHERE table_owner = '", schema, "'")
 	
 	  indices <- tryCatch(
-	            data.table(DBI::dbGetQuery(dbconn, index.qry)),
+	      DBI::dbGetQuery(dbconn, index.qry),
 				error=function(e) {
-				warning(e)
-  			    return(NULL)}
-                )
+				    warning(e)
+  			    return(NULL)})
 	  if (is.null(indices)) {
 	    schema.qry <- "SELECT DISTINCT table_owner FROM all_indexes"
 	    schemalst <-  DBI::dbGetQuery(dbconn, schema.qry)[,1]
-		message("schema is invalid: ", toString(schemalst))
+		  message("schema is invalid: ", toString(schemalst))
+	  } else {
+	    indices <- setDT(indices)
 	  }
 	}  
 				  
-    if (!is.null(tblnm)) {
+  if (!is.null(tblnm)) {
 	  if (!is.null(schema)) {
-	    index.qry <- paste0(index.qry,
-	             "\n   AND table_name in(", addcommas(tblnm, quotes=TRUE), ")",
-				 "\nORDER BY table_name")
+	    index.qry <- paste0(
+	      index.qry,
+	      "\n   AND table_name in(", addcommas(tblnm, quotes=TRUE), ")",
+				"\nORDER BY table_name")
 	  } else {
-	  	index.qry <- paste0(index.qry,
-	             "\nWHERE table_name in(", addcommas(tblnm, quotes=TRUE), ")",
-				 "\nORDER BY table_name")
-	  }
-	}			 
+	  	index.qry <- paste0(
+	  	  index.qry,
+	      "\nWHERE table_name in(", addcommas(tblnm, quotes=TRUE), ")",
+				"\nORDER BY table_name")
+	    }
+	  }			 
   }
-  message(index.qry)
+  #message(index.qry)
      
   indices <- DBI::dbGetQuery(dbconn, index.qry)
   if (is.null(tblnm)) {
@@ -1559,7 +1584,7 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
         split2 <- strsplit(split1, "\\)")[[1]][1]
 	    return(split2)
 		}
-	indices$cols <- sapply(indices$sql, getcols)
+	  indices$cols <- sapply(indices$sql, getcols)
 
     if (!is.null(index_cols)) {
       index_test <- data.frame(sapply(index_cols, 
@@ -1573,30 +1598,34 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
       } 
     } else {
       return(indices[, c("tbl_name", "sql", "cols")])
-	}
+	  }
   } else {
     return(indices)
   }
   if (!dbconnopen) {
     DBI::dbDisconnect(dbconn)
   }
-
 }
 
 #' @rdname internal_desc
 #' @export
-createidx <- function(dbconn, tbl, index_cols, unique=FALSE, dbconnopen=TRUE) {
+createidx <- function(dbconn, schema=NULL, tbl, index_cols, unique=FALSE, dbconnopen=TRUE) {
   ## DESCRIPTION: create index
 
+  SCHEMA. <- ""
   if (is.character(dbconn)) {
     message("must check an open connection")
-	return(NULL)
+	  return(NULL)
   }
 
   if (!DBI::dbIsValid(dbconn)) {
     message("dbconn is not valid")
     return(NULL)
   }
+  if (!is.null(schema)) {
+    SCHEMA. <- paste0(schema, ".")
+  }
+  
   flds <- DBI::dbListTables(dbconn)
 
   tblnm <- findnm(tbl, flds, returnNULL=TRUE)

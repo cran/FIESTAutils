@@ -31,6 +31,7 @@
 \alias{zonalMajority}
 \alias{zonalMinority}
 \alias{zonalVariety}
+\alias{zonalBayes}
 \alias{raster_desc}
 \alias{getrastlst}
 \alias{areacalc.pixel}
@@ -173,7 +174,8 @@ zonalStats(
   lut = NULL,
   pixelfun = NULL,
   na.rm = TRUE,
-  ignoreValue = NULL
+  ignoreValue = NULL,
+  show_progress = FALSE
 )
 
 zonalMean(
@@ -199,7 +201,8 @@ zonalFreq(
   aggfun = NULL,
   lut = NULL,
   na.rm = FALSE,
-  ignoreValue = NULL
+  ignoreValue = NULL,
+  show_progress = FALSE
 )
 
 zonalMajority(
@@ -235,11 +238,25 @@ zonalVariety(
   ...
 )
 
+zonalBayes(
+  dsn = NULL,
+  layer = NULL,
+  src = NULL,
+  zoneidfld,
+  helperidfld = NULL,
+  rasterfiles,
+  prednames,
+  predfun,
+  xy = FALSE,
+  nMCMC = 100
+)
+
 getrastlst(
   rastnmlst,
   rastfolder = NULL,
   stopifLonLat = FALSE,
   stopifnull = FALSE,
+  stopifinvalid = FALSE,
   gui = FALSE,
   quiet = FALSE
 )
@@ -255,6 +272,7 @@ getrastlst.rgdal(
   rastfolder = NULL,
   stopifLonLat = FALSE,
   stopifnull = FALSE,
+  stopifinvalid = FALSE,
   gui = FALSE,
   quiet = FALSE
 )

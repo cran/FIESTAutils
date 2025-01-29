@@ -1,36 +1,3 @@
-#' Class \code{"Rcpp_CmbTable"}
-#'
-#' C++ program to combine raster files.
-#'
-#'
-#' @name Rcpp_CmbTable-class
-#' @docType class
-#' @section Extends: Class \code{"\linkS4class{C++Object}"}, directly.
-#'
-#' All reference classes extend and inherit methods from
-#' \code{"\linkS4class{envRefClass}"}.
-#' @author Chris Toney
-#' @keywords classes
-NULL
-
-
-
-#' Class \code{"Rcpp_RunningStats"}
-#'
-#' C++ program to calculate mean and variance on a data stream.
-#'
-#'
-#' @name Rcpp_RunningStats-class
-#' @docType class
-#' @section Extends: Class \code{"\linkS4class{C++Object}"}, directly.
-#'
-#' All reference classes extend and inherit methods from
-#' \code{"\linkS4class{envRefClass}"}.
-#' @author Chris Toney
-#' @keywords classes
-NULL
-
-
 #' Reference tables - gdal data types.
 #'
 #' Table with gdal data type names.
@@ -383,6 +350,19 @@ NULL
 #' @name ref_popType
 #' @docType data
 #' @format A dataframe with 2 columns, VARNM and TITLE.
+#' @source Comma-delimited file.
+#' @keywords datasets
+NULL
+
+
+#' Reference table - FIESTA estimators.
+#' 
+#' Table with list of estimators currently in FIESTA.
+#' 
+#' 
+#' @name ref_estimators
+#' @docType data
+#' @format A dataframe with 7 columns: ESTIMATOR, SHORTNAME, PACKAGE, OUTNAME, ESTIMATOR_TYPE, ESTIMATOR_DATA, DESCRIPTION, CITATION
 #' @source Comma-delimited file.
 #' @keywords datasets
 NULL
