@@ -1194,7 +1194,6 @@ DBcreateSQLite <- function(SQLitefn=NULL, gpkg=FALSE, dbconnopen=FALSE,
   if (is.null(SQLitePath) && is.null(SQLitefn)) {
     SQLitefn <- "data"
   }
-
   if (!is.null(outfn.pre)) {
     SQLitefn <- paste(outfn.pre, SQLitefn, sep="_")
   }
@@ -1203,7 +1202,7 @@ DBcreateSQLite <- function(SQLitefn=NULL, gpkg=FALSE, dbconnopen=FALSE,
     SQLitefn <- paste0(SQLitefn, dbext)
   }
   if (!dir.exists(dirname(SQLitefn))) {
-    stop("invalid directory path") 
+    message("invalid directory path: ", SQLitePath) 
   }
   SQLitepath <- getoutfn(SQLitefn, outfn.date=outfn.date, 
 		outfolder=outfolder, overwrite=overwrite, ext="sqlite")
@@ -1211,19 +1210,19 @@ DBcreateSQLite <- function(SQLitefn=NULL, gpkg=FALSE, dbconnopen=FALSE,
   ## Overwrite file
   if (file.exists(SQLitepath)) {
     if (overwrite) {
+      message("overwriting database... ", normalizePath(SQLitefn, winslash="/"))
       file.remove(SQLitepath) 
-      message("overwriting database... ", SQLitepath)
     } else {
       sqlconn <- DBtestSQLite(SQLitefn=SQLitefn, gpkg=gpkg, dbconnopen=dbconnopen,
-		showlist=FALSE)
+		                          showlist=FALSE)
       if (dbconnopen) return(sqlconn)    
     }
   } else {
     ## Connect to database
     message("creating new SQLite database... ")
-    message(SQLitepath)
     sqlconn <- DBI::dbConnect(RSQLite::SQLite(), SQLitepath, loadable.extensions = TRUE)
-
+    message(normalizePath(SQLitepath, winslash="/"))
+    
     if (dbconnopen) {
       return(sqlconn)
     } else {
@@ -1463,7 +1462,7 @@ customEvalchk <- function(states, measCur = TRUE, measEndyr = NULL,
 #' @export
 checkidx <- function(dbconn, tbl = NULL, index_cols = NULL, 
                      datsource = "sqlite", schema = "FS_FIADB",
-					 dbconnopen = TRUE) {
+					           dbconnopen = TRUE) {
   ## DESCRIPTION: checks table in database
   ## dbconn - open database connection
   ## tbl - one or more tables to check
@@ -1525,7 +1524,11 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
 	      index.qry,
 	      "\n   AND tbl_name in(", addcommas(tblnm, quotes=TRUE), ")",
 			  "\nORDER BY tbl_name")
-	  }
+    }
+  } else if (datsource == "postgres") {
+    index.qry <- paste0("SELECT tablename, indexname",
+                        "\nFROM pg_indexes")
+  
   } else {  ## datsource != 'sqlite'
     index.qry <- paste0("SELECT table_name, index_name", 
 	              "\nFROM all_indexes")
@@ -1609,7 +1612,11 @@ checkidx <- function(dbconn, tbl = NULL, index_cols = NULL,
 
 #' @rdname internal_desc
 #' @export
-createidx <- function(dbconn, schema=NULL, tbl, index_cols, unique=FALSE, dbconnopen=TRUE) {
+createidx <- function(dbconn, schema=NULL, 
+                      tbl, 
+                      index_cols, 
+                      unique=FALSE, 
+                      dbconnopen=TRUE) {
   ## DESCRIPTION: create index
 
   SCHEMA. <- ""
@@ -1624,18 +1631,26 @@ createidx <- function(dbconn, schema=NULL, tbl, index_cols, unique=FALSE, dbconn
   }
   if (!is.null(schema)) {
     SCHEMA. <- paste0(schema, ".")
+    
+    ## get list of tables from database
+    dbtablesdf <- as.data.frame(do.call(rbind, 
+                      lapply(DBI::dbListObjects(dbconn, DBI::Id(schema = 'wo_fiesta'))$table, 
+                             function(x) methods::slot(x, 'name'))))
+    dbtables <- dbtablesdf$table
+  } else {
+    
+    ## get list of tables from database
+    dbtables <- DBI::dbListTables(dbconn)
   }
-  
-  flds <- DBI::dbListTables(dbconn)
 
-  tblnm <- findnm(tbl, flds, returnNULL=TRUE)
+  tblnm <- findnm(tbl, dbtables, returnNULL=TRUE)
   indxnm <- paste0(tblnm, "_", paste(tolower(index_cols), collapse="_"), "_idx")
  
   if (unique) {
-    idxsql <- paste0("create unique index ", indxnm, " ON ", tbl,
+    idxsql <- paste0("create unique index ", indxnm, " ON ", SCHEMA., tbl,
 				"(", paste(index_cols, collapse=","), ")")
   } else {
-    idxsql <- paste0("create index ", indxnm, " ON ", tbl,
+    idxsql <- paste0("create index ", indxnm, " ON ", SCHEMA., tbl,
 				"(", paste(index_cols, collapse=","), ")")
   }
 

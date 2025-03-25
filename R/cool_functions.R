@@ -81,7 +81,11 @@ checkfilenm <- function(fn, outfolder=NULL, ext=NULL,
         return(NULL)
       }
     } else {
-      return(file.path(outfolder, paste0(fn, ext)))
+      pathnm <- file.path(outfolder, paste0(fn, ext))
+      if (!is.null(outfolder)) {
+        pathnm <- normalizePath(pathnm, winslash="/")
+      }
+      return(pathnm)
     }
   } else {
     return(NULL)
@@ -139,7 +143,7 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
       outfolder <- outfn.dir
     } else {
       if (dir.exists(file.path(outfolder, outfn.dir))) {
-        outfolder <- file.path(outfolder, outfn.dir)
+        outfolder <- normalizePath(file.path(outfolder, outfn.dir), winslash="/")
       }
     }
   }
@@ -155,7 +159,7 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
     } else if (dir.exists(dirname(outfn))) {
       outfolder <- dirname(outfn)
     } else {
-      outfolder <- dirname(normalizePath(outfn))
+      outfolder <- dirname(normalizePath(outfn, winslash="/"))
     }
   }
 
@@ -175,6 +179,7 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
     nm <- paste0(outfilenm, ".", ext)
 
     if (file.exists(nm)) {
+      message("overwriting ", normalizePath(nm, winslash="/"), "...")
       test <- tryCatch(
         file.remove(nm),
 			warning=function(war) {
@@ -196,15 +201,12 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
           stop("permission denied")
         }
       }
-      message("overwriting ", nm, "...")
     }
   } else if (!append && !add) {
     outfn.base <- fileexistsnm(outfolder, outfn.base, ext)
   }
   if (!baseonly) {
-    ## Check outfolder
-    #outfolder <- pcheck.outfolder(outfolder, gui=gui)
-    outfilenm <- file.path(normalizePath(outfolder), outfn.base)
+    outfilenm <- file.path(outfolder, outfn.base)
   } else {
     outfilenm <- outfn.base
   }
@@ -218,6 +220,7 @@ getoutfn <- function(outfn, outfolder=NULL, outfn.pre=NULL, outfn.date=FALSE,
   }
   return(outfilenm)
 }
+
 
 #' @rdname internal_desc
 #' @export
@@ -407,8 +410,10 @@ getnm <- function (xvar, group=FALSE) {
 checknm <- function(nm, nmlst, ignore.case=TRUE) {
   ## if nm already exists in nmlst, change nm to nm_*
   i <- 0
+  
+  nmlst <- gsub(" ", "", nmlst)
   while (any(grepl(paste0("^",nm,"&"), nmlst, ignore.case=ignore.case)) || 
-                    any(grepl(paste0("^",nm), nmlst, ignore.case=ignore.case))) {
+                    any(grepl(paste0("^",nm,"^"), nmlst, ignore.case=ignore.case))) {
   #while (nm %in% nmlst) {
     i <- i + 1
     nm <- paste(nm, 1, sep="_")
